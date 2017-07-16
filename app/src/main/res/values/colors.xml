@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="colorPrimary">#8E24AA</color>
+	<color name="colorPrimaryDark">#5E35B1</color>
+	<color name="colorPrimary1">#00E676</color>
+	<color name="colorPrimaryDark1">#2c3e50</color>
+	<color name="black">#000000</color>
+	<color name="black1">#ffffff</color>
+	<color name="colorAccent">#FF4081</color>
+
+
+	<color name="colorText">#ffffff</color>
+	<color name="TextColor">#FF4081</color>
+	<color name="White">#FFFFFF</color>
+	<color name="textArea">#BBDEFB</color>
+	<color name="btnColor">#1E88E5</color>
+	<color name="btnColorTap">#80000000</color>
+	<color name="white">#ffffff</color>
+	<color name="MDASColor">#0091EA</color>
+	<color name="NumberColor">#00BCD4</color>
+	<color name="colorPressMDAS">#40C4FF</color>
+	<color name="colorReleaseMDAS">#00B0FF</color>
+	<color name="ColorTrigoButtonNormal">#00B8D4</color>
+	<color name="FirsDayofAweek">#f00</color>
+	<color name="ColorGray">#ffffff</color>
+
+
+	<color name="color1">#e53935</color>
+	<color name="color2">#D81B60</color>
+	<color name="color3">#8E24AA</color>
+	<color name="color4">#5E35B1</color>
+	<color name="color5">#00897B</color>
+	<color name="color6">#43A047</color>
+	<color name="color7">#7CB342</color>
+	<color name="color8">#C0CA33</color>
+	<color name="color9">#FDD835</color>
+	<color name="color10">#00E5FF</color>
+	<color name="color11">#01579B</color>
+	<color name="color12">#D500F9</color>
+
+	<array name="randomColor">
+		<item>@color/color1</item>
+		<item>@color/color2</item>
+		<item>@color/color3</item>
+		<item>@color/color4</item>
+		<item>@color/color5</item>
+		<item>@color/color6</item>
+		<item>@color/color7</item>
+		<item>@color/color8</item>
+		<item>@color/color9</item>
+		<item>@color/color10</item>
+		<item>@color/color11</item>
+		<item>@color/color12</item>
+	</array>
+
+</resources>

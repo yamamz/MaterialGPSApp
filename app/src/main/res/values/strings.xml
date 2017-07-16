@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">GPS Area Plotter</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="characterToReplace">[-+^:,]</string>
+    <string name="title_activity_loc_details">details</string>
+    <string name="input">Save Location</string>
+    <string name="input_hint">location Name</string>
+    <string name="input_prefill"></string>
+    <string name="no_maps">no maps</string>
+    <string name="icon">icon</string>
+    <string name="united_nations">united nation</string>
+    <string name="lincoln_center">lincoln center</string>
+    <string name="un">un</string>
+    <string name="lincoln_center_snippet">lincoln_center_snippet</string>
+    <string name="carnegie_hall">carnegie_hall</string>
+    <string name="practice_x3">practice_x3</string>
+    <string name="downtown_club">downtown_club</string>
+    <string name="heisman_trophy">heisman_trophy</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="_0_0_m">0.0 M</string>
+    <string name="empty_list_nplease_click_plus_button_to_add_location">Empty List \n Please click Plus Button to add location</string>
+    <string name="youLoc">Your Location</string>
+</resources>

@@ -1,0 +1,51 @@
+<android.support.constraint.ConstraintLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context="com.yamamz.materialgpsapp.fragment.Location">
+
+
+	<LinearLayout
+		android:id="@+id/empty"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_centerInParent="true"
+		android:layout_marginLeft="8dp"
+		android:layout_marginRight="8dp"
+		android:orientation="vertical"
+		app:layout_constraintHorizontal_bias="0.569"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		android:layout_marginTop="50dp"
+		android:layout_marginStart="8dp"
+		android:layout_marginEnd="8dp">
+
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center"
+			android:src="@drawable/ic_view_list_pink_500_24dp" />
+
+		<TextView
+			android:id="@+id/empty_textView"
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			android:gravity="center"
+			android:text="@string/empty_list_nplease_click_plus_button_to_add_location" />
+
+	</LinearLayout>
+
+	<android.support.v7.widget.RecyclerView
+		android:id="@+id/recyclerView"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		app:layout_constraintHorizontal_bias="0.0"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		tools:layout_constraintTop_creator="1"
+		tools:layout_constraintRight_creator="1"
+		tools:layout_constraintLeft_creator="1"
+		app:layout_constraintTop_toTopOf="parent" />
+</android.support.constraint.ConstraintLayout>
