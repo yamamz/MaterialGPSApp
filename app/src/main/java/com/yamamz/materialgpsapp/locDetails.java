@@ -3,14 +3,12 @@ package com.yamamz.materialgpsapp;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -18,7 +16,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.yamamz.materialgpsapp.model.LocationModel;
@@ -34,16 +31,16 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
-public class locDetails extends AbstractMapActivity implements
-        OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
-    private boolean needsInit = false;
 
+
+public class locDetails extends FragmentActivity implements OnMapReadyCallback {
+    private boolean needsInit = false;
+    private GoogleMap mMap;
     private Realm realm;
     private RecyclerView recyclerView;
     private locationAdapter mAdapter;
     private String fileName;
     private SupportMapFragment mapFragment;
-    private GoogleMap mGoogleMap;
     private RealmList<LocationModel> locationList = new RealmList<>();
     private List<LatLng> latLngList = new ArrayList<>();
 
@@ -51,17 +48,14 @@ public class locDetails extends AbstractMapActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loc_details);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        if (readyToGo()) {
-            System.gc();
+
+
+
             mapFragment = (SupportMapFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
 
-
-        }
 
 
         Intent startingIntent = getIntent();
@@ -99,12 +93,9 @@ public class locDetails extends AbstractMapActivity implements
             mAdapter.notifyDataSetChanged();
         }
 
-
         if (savedInstanceState == null) {
             needsInit = true;
         }
-
-
     }
 
 
@@ -123,41 +114,33 @@ public class locDetails extends AbstractMapActivity implements
         super.onDestroy();
         realm.close();
 
+        if (mMap != null) {
+            mMap.clear();
+            Log.e("Yamamz", "On destroy");
+        }
 
-    }
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        System.gc();
+System.gc();
     }
 
-    @Override
-    public void onInfoWindowClick(Marker marker) {
-
-    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
         CameraUpdate center=
-                CameraUpdateFactory.newLatLng(new LatLng(latLngList.get(0).latitude,
-                       latLngList.get(0).longitude));
-        CameraUpdate zoom= CameraUpdateFactory.zoomTo(18);
-        googleMap.moveCamera(center);
-        googleMap.animateCamera(zoom);
-        googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                CameraUpdateFactory.newLatLng(new LatLng(latLngList.get(0).latitude,latLngList.get(0).longitude));
+        CameraUpdate zoom= CameraUpdateFactory.zoomTo(17);
+        mMap.moveCamera(center);
+        mMap.animateCamera(zoom);
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+    mMap.setMaxZoomPreference(19);
 if(latLngList.size()>1) {
     PolygonOptions area = new PolygonOptions().addAll(latLngList)
             .strokeWidth(3).strokeColor(Color.BLUE);
-    googleMap.addPolygon(area);
+    mMap.addPolygon(area);
 }
 else{
-    addMarker(googleMap,latLngList.get(0).latitude,latLngList.get(0).longitude,"You",fileName);
+    addMarker(mMap,latLngList.get(0).latitude,latLngList.get(0).longitude,"You",fileName);
 }
-        googleMap.setInfoWindowAdapter(new PopupAdapter(getLayoutInflater()));
-        googleMap.setOnInfoWindowClickListener(this);
-
-        System.gc();
-
 
 
     }
@@ -168,50 +151,6 @@ else{
         map.addMarker(new MarkerOptions().position(new LatLng(lat, lon))
                 .title(title)
                 .snippet(snippet));
-    }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_details, menu);
-        return true;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id=item.getItemId();
-
-        switch (item.getItemId()){
-
-            case R.id.action_settings:
-                break;
-            case R.id.icnRemove:
-                realm.executeTransactionAsync(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm bgRealm) {
-                        RealmResults<SaveLocation> results =bgRealm.where(SaveLocation.class)
-                                .equalTo("fileName",
-                                        fileName).findAll();
-                        results.deleteAllFromRealm();
-                    }
-                }, new Realm.Transaction.OnSuccess() {
-
-                    @Override
-                    public void onSuccess() {
-
-                        Toast.makeText(locDetails.this, "Delete successfully on location " +
-                                fileName, Toast
-                                .LENGTH_LONG).show();
-                        Intent intent = new Intent(locDetails.this, MainActivity.class);
-                        startActivity(intent);
-
-                    }
-                });
-                break;
-
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
 

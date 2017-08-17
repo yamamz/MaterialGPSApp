@@ -33,7 +33,6 @@
             android:name=".locDetails"
             android:label="@string/title_activity_loc_details"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"
             tools:targetApi="jelly_bean"/>
 
         <meta-data
@@ -43,6 +42,12 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version"/>
+
+        <service
+            android:name=".service.MyService"
+            android:enabled="true"
+            android:exported="true"
+        />
 
     </application>
 

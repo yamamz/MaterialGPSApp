@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.yamamz.materialgpsapp.MainActivity;
 import com.yamamz.materialgpsapp.R;
 import com.yamamz.materialgpsapp.locDetails;
 import com.yamamz.materialgpsapp.model.SaveLocation;
@@ -56,7 +57,7 @@ public class saveLocationAdapter extends RecyclerView.Adapter<saveLocationAdapte
     }
 
     @Override
-    public void onBindViewHolder(myViewHolder holder, int position) {
+    public void onBindViewHolder(final myViewHolder holder, int position) {
         final SaveLocation saveLocation=saveLocationList.get(position);
 
         @SuppressLint("Recycle") TypedArray circles = context.getResources().obtainTypedArray(R
@@ -76,6 +77,15 @@ public class saveLocationAdapter extends RecyclerView.Adapter<saveLocationAdapte
                 Intent intent = new Intent(context, locDetails.class);
                 intent.putExtra("fileName",saveLocation.getFileName());
                 context.startActivity(intent);
+            }
+        });
+
+        holder.mView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                ((MainActivity)context).deletelocation(saveLocation.getFileName());
+                return true;
             }
         });
 

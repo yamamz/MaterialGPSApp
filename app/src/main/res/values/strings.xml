@@ -20,7 +20,8 @@
     <string name="downtown_club">downtown_club</string>
     <string name="heisman_trophy">heisman_trophy</string>
     <string name="title_activity_main2">Main2Activity</string>
-    <string name="_0_0_m">0.0 M</string>
+    <string name="_0_0_m">--</string>
     <string name="empty_list_nplease_click_plus_button_to_add_location">Empty List \n Please click Plus Button to add location</string>
     <string name="youLoc">Your Location</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
