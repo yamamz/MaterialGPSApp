@@ -16,7 +16,7 @@ import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-public class MyService extends Service
+public class locationService extends Service
 {
     private static final String TAG = "yamamz";
     private LocationManager mLocationManager = null;
@@ -28,7 +28,7 @@ public class MyService extends Service
     {
 
 
-        public LocationListener(String provider)
+        LocationListener(String provider)
         {
             Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
