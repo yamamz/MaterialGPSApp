@@ -3,7 +3,7 @@ package com.yamamz.materialgpsapp.model;
 import io.realm.RealmObject;
 
 /**
- * Created by AMRI on 10/3/2016.
+ * Created by Raymundo T. Melecio on 11/30/2016.
  */
 public class LocationModel extends RealmObject {
 

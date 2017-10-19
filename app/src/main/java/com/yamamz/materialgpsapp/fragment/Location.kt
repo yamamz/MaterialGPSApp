@@ -29,7 +29,9 @@ import java.util.ArrayList
 
 import io.realm.Realm
 import io.realm.RealmList
-
+/**
+* Created by Raymundo T. Melecio on 11/30/2016.
+*/
 
 class Location : Fragment() {
 

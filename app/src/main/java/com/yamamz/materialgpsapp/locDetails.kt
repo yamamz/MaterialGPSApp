@@ -32,6 +32,10 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 
+/**
+* Created by Raymundo T. Melecio on 11/30/2016.
+*/
+
 
 class locDetails : FragmentActivity(), OnMapReadyCallback {
     private var mMap: GoogleMap? = null

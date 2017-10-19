@@ -5,7 +5,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
 /**
- * Created by AMRI on 1/12/2017.
+ * Created by Raymundo T. Melecio on 11/30/2016.
  */
 
 public class SaveLocation extends RealmObject{

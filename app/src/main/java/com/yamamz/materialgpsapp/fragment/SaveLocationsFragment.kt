@@ -22,8 +22,8 @@ import io.realm.Realm
 import io.realm.Sort
 
 /**
- * A simple [Fragment] subclass.
- */
+* Created by Raymundo T. Melecio on 11/30/2016.
+*/
 class SaveLocationsFragment : Fragment() {
 
     private var realm: Realm? = null
