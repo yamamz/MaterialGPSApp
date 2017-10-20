@@ -47,8 +47,6 @@ class Location : Fragment() {
     private var altitiude: Double = 0.toDouble()
     private var acuracy: Float = 0.toFloat()
     private var speed: Double = 0.toDouble()
-
-
     private val locationList = RealmList<LocationModel>()
     internal var Northings = ArrayList<Double>()
     internal var Eastings = ArrayList<Double>()
@@ -177,13 +175,9 @@ class Location : Fragment() {
                     prody[iteration] = Eastings[iteration] * Northings[0]
                 }
                 sumxy[iteration] = prodx[iteration] - prody[iteration]
-
             }
-
-
             for (l in sumxy) {
                 sum += l
-
             }
 
             if (sum < 0) {

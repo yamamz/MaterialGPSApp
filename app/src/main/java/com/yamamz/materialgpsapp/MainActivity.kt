@@ -59,9 +59,6 @@ class MainActivity : AppCompatActivity() {
 
     var tabLocation: String? = null
     var tabLocationSave: String? = null
-
-
-    private var pDialog: ProgressDialog? = null
     private var Northing: TextView? = null
     private var Easting: TextView? = null
     private var isFabShowing = true
@@ -71,7 +68,6 @@ class MainActivity : AppCompatActivity() {
     private var Speed: TextView? = null
     private var AcuracyText: TextView? = null
     private var fab: FloatingActionButton? = null
-
     var googleApiClient: GoogleApiClient? = null
     val REQUEST_LOCATION = 199
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
@@ -81,24 +77,22 @@ class MainActivity : AppCompatActivity() {
         get() = java.lang.Double.parseDouble(LatitudeText?.text.toString())
     val lon: Double?
         get() = java.lang.Double.parseDouble(LongittudeText?.text.toString())
-
     val easting: Double?
         get() = java.lang.Double.parseDouble(Easting?.text.toString())
-
     val northing: Double?
         get() = java.lang.Double.parseDouble(Northing?.text.toString())
-
     val elevation: Double?
         get() = java.lang.Double.parseDouble(Elevation?.text.toString())
 
     private var InputFragment: Location? = null
     private var realm: Realm? = null
 
+    //Broadcast receiver coming from a service that receives each time it will pass an intent
     private val mMessageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val location = intent.getParcelableExtra<android.location.Location>("location")
             Log.e("Yamamz","New Location")
-
+            //execute a function from a Location fragment and pass location to its argument that was ask
             val LocationFragment = this@MainActivity
                     .supportFragmentManager
                     .findFragmentByTag(tabLocation) as Location
@@ -109,21 +103,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val mMessageReceiver1 = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            Toast.makeText(this@MainActivity, "your location updates is not running please enable the gps", Toast.LENGTH_SHORT).show()
-
-
-        }
-    }
-
-    private val mMessageReceiver2 = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            startProgressBar()
-
-
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -158,9 +137,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
-
-
         fab?.setOnClickListener { view ->
 
             InputFragment = this@MainActivity
@@ -170,16 +146,6 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-
-        pDialog = ProgressDialog(this)
-
-
-//        val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-//        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-//            askUserToOpenGPS()
-//        } else {
-//            startProgressBar()
-//        }
         val manager = this@MainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (!hasGPSDevice(this@MainActivity)) {
             Toast.makeText(this@MainActivity, "Gps not Supported", Toast.LENGTH_SHORT).show()
@@ -286,7 +252,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setViews(northings: String, easting: String, latitude: String, longitude: String, acuracy: String, elevation: String, speed: String) {
-        stopProgressBar()
+
         LatitudeText?.text = latitude
         LongittudeText?.text = longitude
         Easting?.text = easting
@@ -396,53 +362,18 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                mMessageReceiver1, IntentFilter("disableGps"))
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                mMessageReceiver2, IntentFilter("openpregress"))
     }
-
-    fun startProgressBar() {
-
-        pDialog?.setMessage("Please wait...")
-        pDialog?.setCancelable(true)
-        pDialog?.show()
-    }
-
-    fun stopProgressBar() {
-        if (pDialog?.isShowing==true)
-            pDialog?.dismiss()
-    }
-
-    fun askUserToOpenGPS() {
-        val mAlertDialog = AlertDialog.Builder(this)
-
-        // Setting Dialog Title
-        mAlertDialog.setTitle("Location not available, Open GPS?")
-                .setMessage("Activate GPS to use use location service and restart the app")
-                .setPositiveButton("Open Settings") { dialog, which ->
-                    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                    startActivity(intent)
-                }
-                .setNegativeButton("Cancel") { dialog, which -> dialog.cancel() }.show()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         realm?.close()
         stopService(Intent(this@MainActivity, locationService::class.java))
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver1)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver2)
     }
 
     override fun onPause() {
         super.onPause()
         realm?.close()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver1)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver2)
     }
 
     private fun hasGPSDevice(context: Context): Boolean {

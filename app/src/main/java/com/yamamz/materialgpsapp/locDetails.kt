@@ -37,7 +37,10 @@ import kotlinx.coroutines.experimental.delay
 */
 
 
-class locDetails : FragmentActivity(), OnMapReadyCallback {
+class locDetails : FragmentActivity(), OnMapReadyCallback{
+    private var polygon: Polygon?=null
+    private var drawing: Boolean=false
+    private var points:ArrayList<LatLng>?= ArrayList()
     private var mMap: GoogleMap? = null
     private var realm: Realm? = null
     private var mAdapter: locationAdapter? = null
@@ -45,14 +48,18 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
     private val locationList = RealmList<LocationModel>()
     private val latLngList = ArrayList<LatLng>()
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loc_details)
+
+        //initialize map
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         val startingIntent = intent
+        //get the value on intent and past it to a string
         fileName = startingIntent.getStringExtra("fileName")
         setupRecyclerView()
 
@@ -61,10 +68,13 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
          */
 
         realm = Realm.getDefaultInstance()
-
+        //find all save locations on Realm database
         val loc = realm?.where(SaveLocation::class.java)?.findAll()
+        //get specific location base on filename that past from intent
         val location = loc?.where()?.equalTo("fileName", fileName)
                 ?.findFirst()
+
+        //format text into 2 decimal point
         val df = DecimalFormat("###.###")
         val tv_area = findViewById<TextView>(R.id.area)
         try {
@@ -72,11 +82,8 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
         } catch (ignore: Exception) {
 
         }
-
-
-
+        //lambda that get each location pass it to Location model to populate into recyclerview
         location?.locations?.forEach {
-
             val locationModel = LocationModel(it.latitude,it.longitude,it.count,it.elevation)
             val latLng = LatLng(it.latitude,it.longitude)
             latLngList.add(latLng)
@@ -87,8 +94,8 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
 
     }
 
-
-    internal fun setupRecyclerView() {
+    //set up  RecyclerView layout and initialize adapter
+    private fun setupRecyclerView() {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         mAdapter = locationAdapter(locationList, this)
         val mLayoutManager = LinearLayoutManager(recyclerView.context)
@@ -113,10 +120,29 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        //move the camera to the center of the map before going to the target location
         val center = LatLng(latLngList[0].latitude, latLngList[0].longitude)
         mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(0.00, 0.00), 0f))
-        mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID
+        mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID//set hybrid map tile
 
+mMap?.setOnMapClickListener { p0->
+    p0?.let { points?.add(it) }
+    if(!drawing){
+        mMap?.addMarker(p0?.let { MarkerOptions().position(it) }
+                ?.anchor(0.2f, 1.0f))
+
+        val rectOptions=PolygonOptions()
+                .strokeWidth(2f)
+                .fillColor(Color.BLUE)
+                .add(p0)
+        polygon = mMap?.addPolygon(rectOptions)
+        drawing = true
+    }
+
+    else {
+        polygon?.points = points
+    }
+}
         async(UI) {
             animateMapFlyGotoLoc(center)
         }
@@ -134,9 +160,8 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
 
 
     private suspend fun animateMapFlyGotoLoc(loc: LatLng) {
-
+        //pause the map so that it will load and sees the flying animation
         delay(1500)
-
         val position = CameraPosition.Builder()
                 .target(loc) // Sets the new camera position
                 .zoom(19f) // Sets the zoom
@@ -146,8 +171,9 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
         mMap?.animateCamera(CameraUpdateFactory
                 .newCameraPosition(position), 2000, null)
 
-        mMap?.setMaxZoomPreference(19f)
+        mMap?.setMaxZoomPreference(19f)//set the maximum zoom level of the map
 
+        //if the lat long size is geater than 1 it will draw a polyline otherwise add marker
         if (latLngList.size > 1) {
             val area = PolygonOptions().addAll(latLngList)
                     .strokeWidth(3f).strokeColor(Color.BLUE)
@@ -156,8 +182,5 @@ class locDetails : FragmentActivity(), OnMapReadyCallback {
         } else {
             addMarker(mMap as GoogleMap, latLngList[0].latitude, latLngList[0].longitude, "You", fileName)
         }
-
-
     }
-
 }

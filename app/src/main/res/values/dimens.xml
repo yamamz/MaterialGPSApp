@@ -15,4 +15,6 @@
     <dimen name="detail_backdrop_height">400dp</dimen>
     <dimen name="detail_backdrop_height1">300dp</dimen>
     <dimen name="card_margin">8dp</dimen>
+    <dimen name="mapHeight">300dp</dimen>
+    <dimen name="map_dot_marker_size">20dp</dimen>
 </resources>
