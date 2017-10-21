@@ -28,6 +28,10 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
     private var drawing: Boolean=false
     private var points: ArrayList<LatLng>?= ArrayList()
     private var  marker: Marker?=null
+    internal var Northings = ArrayList<Double>()
+    internal var Eastings = ArrayList<Double>()
+    private var AreaOfPolygon: Double=0.toDouble()
+
     override fun onMapReady(p0: GoogleMap?) {
 
         mMap = p0
@@ -68,52 +72,47 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
                 marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
 
                 val convertUtm = CoordinateConversion()
-                val northingList=ArrayList<Double>()
-                val eastingList=ArrayList<Double>()
+  
+
+                val UTM = convertUtm.latLon2UTM(p0.latitude,p0.longitude)
+                val lastdot = UTM.lastIndexOf("-")
+                val E = UTM.substring(0, lastdot)
+                val N = UTM.substring(lastdot + 1, UTM.length)
+                var  EastingFormat = java.lang.Double.parseDouble(E)
+                var  NorthingFormat = java.lang.Double.parseDouble(N)
+                EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
+                NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
+ 
+                Northings.add(NorthingFormat)
+                Eastings.add(EastingFormat)
                 //convertLatLong to UTM
-                points?.forEach {
-
-                    val UTM = convertUtm.latLon2UTM(it.latitude, it.longitude)
-                    val lastdot = UTM.lastIndexOf("-")
-                    val E = UTM.substring(0, lastdot)
-                    val N = UTM.substring(lastdot + 1, UTM.length)
-                    var  EastingFormat = java.lang.Double.parseDouble(E)
-                    var  NorthingFormat = java.lang.Double.parseDouble(N)
-                    EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
-                    NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
-                    Toast.makeText(this,"$EastingFormat",Toast.LENGTH_SHORT).show()
-                    northingList.add(NorthingFormat)
-                    eastingList.add(EastingFormat)
-
-                }
 
 
-
-                val area= points?.let { calculateArea(it,northingList,eastingList) }
-               tvArea.text="$area"
+                calculateArea()
+                tvArea.text="$AreaOfPolygon"
 
             }
         }
 
     }
 
-    private fun calculateArea(latLong:ArrayList<LatLng>,northingList:ArrayList<Double>,eastingList:ArrayList<Double>):Double{
 
 
-        if (latLong.size >= 3) {
+    internal fun calculateArea() {
+        if (Northings.size >= 3) {
             var sum = 0.0
             val area: Double
-            val prodx = DoubleArray(latLong.size)
-            val prody = DoubleArray(latLong.size)
-            val sumxy = DoubleArray(latLong.size)
-            for (iteration in latLong.indices) {
-                if (iteration < latLong.size - 1) {
-                    prodx[iteration] = northingList[iteration] * eastingList[iteration + 1]
-                    prody[iteration] = eastingList[iteration] * northingList[iteration + 1]
+            val prodx = DoubleArray(Northings.size)
+            val prody = DoubleArray(Northings.size)
+            val sumxy = DoubleArray(Northings.size)
+            for (iteration in Northings.indices) {
+                if (iteration < Northings.size - 1) {
+                    prodx[iteration] = Northings[iteration] * Eastings[iteration + 1]
+                    prody[iteration] = Eastings[iteration] * Northings[iteration + 1]
                 }
-                if (iteration == latLong.size - 1) {
-                    prodx[iteration] = northingList[iteration] * northingList[0]
-                    prody[iteration] = eastingList[iteration] * northingList[0]
+                if (iteration == Northings.size - 1) {
+                    prodx[iteration] = Northings[iteration] * Eastings[0]
+                    prody[iteration] = Eastings[iteration] * Northings[0]
                 }
                 sumxy[iteration] = prodx[iteration] - prody[iteration]
             }
@@ -128,14 +127,10 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             area = sum / 2
-val df=DecimalFormat("##.###")
 
-
-            return df.format(area).toDouble()
+            AreaOfPolygon = area
 
         }
-
-        return 0.0
 
     }
 
@@ -154,31 +149,15 @@ val df=DecimalFormat("##.###")
                 val marker:Marker?= hashMapMarker[points?.size]
                 marker?.remove()
                 hashMapMarker.remove(points?.size)
+                Northings.size.minus(1).let { Northings.removeAt(it) }
+                Eastings.size.minus(1).let { Eastings.removeAt(it) }
                 points?.size?.minus(1)?.let { points?.removeAt(it) }
                 polygon?.points = points
 
 
-                val convertUtm = CoordinateConversion()
-                val northingList=ArrayList<Double>()
-                val eastingList=ArrayList<Double>()
-                //convertLatLong to UTM
-                points?.forEach {
 
-                    val UTM = convertUtm.latLon2UTM(it.latitude, it.longitude)
-                    val lastdot = UTM.lastIndexOf("-")
-                    val E = UTM.substring(0, lastdot)
-                    val N = UTM.substring(lastdot + 1, UTM.length)
-                    var  EastingFormat = java.lang.Double.parseDouble(E)
-                    var  NorthingFormat = java.lang.Double.parseDouble(N)
-                    EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
-                    NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
-                    Toast.makeText(this,"$EastingFormat",Toast.LENGTH_SHORT).show()
-                    northingList.add(NorthingFormat)
-                    eastingList.add(EastingFormat)
-
-                }
-                val area= points?.let { calculateArea(it,northingList,eastingList) }
-                tvArea.text="$area"
+                calculateArea()
+                tvArea.text="$AreaOfPolygon"
             }
 
             else{
