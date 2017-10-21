@@ -20,6 +20,7 @@
         tools:context="com.yamamz.materialgpsapp.PlotActivity" />
 
     <TextView
+
         android:fontFamily="sans-serif-condensed"
         android:textColor="@color/white"
         android:textSize="18sp"

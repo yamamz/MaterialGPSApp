@@ -85,9 +85,8 @@ class MainActivity : AppCompatActivity() {
     val elevation: Double?
         get() = java.lang.Double.parseDouble(Elevation?.text.toString())
 
-    private var InputFragment: Location? = null
+    private var locationFragment: Location? = null
     private var realm: Realm? = null
-
     //Broadcast receiver coming from a service that receives each time it will pass an intent
     private val mMessageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -120,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         if (viewPager != null) {
             setupViewPager(viewPager)
         }
-
+        //initialize tab layout
         val tabLayout = findViewById<TabLayout>(R.id.tabs)
         tabLayout.setupWithViewPager(viewPager)
 
@@ -139,25 +138,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         fab?.setOnClickListener { view ->
-
-            InputFragment = this@MainActivity
+            //for adding locations to fragment
+            locationFragment = this@MainActivity
                     .supportFragmentManager
                     .findFragmentByTag(tabLocation) as Location
-            InputFragment?.addLocation()
+            locationFragment?.addLocation()
 
         }
-
+        //for getting gps service status
         val manager = this@MainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        //check if the device has gps support
         if (!hasGPSDevice(this@MainActivity)) {
             Toast.makeText(this@MainActivity, "Gps not Supported", Toast.LENGTH_SHORT).show()
         }
 
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER) && hasGPSDevice(this@MainActivity)) {
-
+            //request permission for location
             if (!checkPermissions()) {
                 requestPermissions()
             } else {
+                //enable gps
                 enableLoc()
+                //start the background service to get location updates
                 startService(Intent(this@MainActivity, locationService::class.java))
 
             }
@@ -241,17 +243,17 @@ btn_plot.setOnClickListener {
             R.id.action_settings -> {
             }
             R.id.icnSave -> {
-                InputFragment = this@MainActivity
+                locationFragment = this@MainActivity
                         .supportFragmentManager
                         .findFragmentByTag(tabLocation) as Location
 
-                InputFragment?.Saveloc()
+                locationFragment?.Saveloc()
             }
             R.id.icnRemove -> {
-                InputFragment = this@MainActivity
+                locationFragment = this@MainActivity
                         .supportFragmentManager
                         .findFragmentByTag(tabLocation) as Location
-                InputFragment?.clearLocations()
+                locationFragment?.clearLocations()
             }
         }
 

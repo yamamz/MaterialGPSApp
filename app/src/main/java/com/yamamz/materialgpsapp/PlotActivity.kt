@@ -26,12 +26,13 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
     var mMap:GoogleMap?=null
     private var polygon: Polygon?=null
     val hashMapMarker = HashMap<Int, Marker>()
-    private var drawing: Boolean=false
+    private var firstPoint: Boolean=false
     private var points: ArrayList<LatLng>?= ArrayList()
     private var  marker: Marker?=null
     internal var Northings = ArrayList<Double>()
     internal var Eastings = ArrayList<Double>()
     private var AreaOfPolygon: Double=0.toDouble()
+
 
     @SuppressLint("SetTextI18n")
     override fun onMapReady(p0: GoogleMap?) {
@@ -42,33 +43,36 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID//set hybrid map tile
 
 
-
+        //create a marker bitmap
         val px = resources.getDimensionPixelSize(R.dimen.map_dot_marker_size)
         val mDotMarkerBitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(mDotMarkerBitmap)
         val shape = ContextCompat.getDrawable(this@PlotActivity, R.drawable.circle_marker)
         shape.setBounds(0, 0, mDotMarkerBitmap.width, mDotMarkerBitmap.height)
         shape.draw(canvas)
+
+        //map click listener
         mMap?.setOnMapClickListener { p0 ->
+            //add the Latlong to points List
             p0?.let { points?.add(it) }
-            if (!drawing) {
 
-
-
+            if (!firstPoint) {
+                //add the circle marker to the map
                 marker=mMap?.addMarker(p0?.let { MarkerOptions().position(it) }
                         ?.icon(BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap))
                         ?.anchor(0.5f, 0.5f))
+                //put the marker the hashmap for removing purpose
                 marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
 
+                //initialize polygon Options
                 val rectOptions = PolygonOptions()
                         .strokeWidth(4f)
                         .fillColor(0x7F00FF00)
                         .add(p0)
                 polygon = mMap?.addPolygon(rectOptions)
 
+                //convert wgs84 to UTM projection
                 val convertUtm = CoordinateConversion()
-
-
                 val UTM = convertUtm.latLon2UTM(p0.latitude,p0.longitude)
                 val lastdot = UTM.lastIndexOf("-")
                 val E = UTM.substring(0, lastdot)
@@ -78,19 +82,22 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
                 EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
                 NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
 
+                //add the northing and easting to its list
                 Northings.add(NorthingFormat)
                 Eastings.add(EastingFormat)
-                drawing = true
+                firstPoint = true
             } else {
+                //update polygon shape base on latLong
                 polygon?.points = points
+                //add marker for polygon corner
                 marker= mMap?.addMarker(p0?.let { MarkerOptions().position(it) }
                         ?.icon(BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap))
                         ?.anchor(0.5f, 0.5f))
+                //put marker object to haskmap for removing marker purpose
                 marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
 
+                //convert wgs84 to UTM projection
                 val convertUtm = CoordinateConversion()
-  
-
                 val UTM = convertUtm.latLon2UTM(p0.latitude,p0.longitude)
                 val lastdot = UTM.lastIndexOf("-")
                 val E = UTM.substring(0, lastdot)
@@ -99,15 +106,14 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
                 var  NorthingFormat = java.lang.Double.parseDouble(N)
                 EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
                 NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
- 
+                //add northing easting to the list for calculation of area
                 Northings.add(NorthingFormat)
                 Eastings.add(EastingFormat)
-                //convertLatLong to UTM
 
 
                 calculateArea()
                 val df=DecimalFormat("##.####")
-                tvArea.text="Area: ${df.format(AreaOfPolygon)}m²"
+                tvArea.text="Area: ${df.format(AreaOfPolygon)} m²"
 
             }
         }
@@ -115,7 +121,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-
+    //this function is for calculating the area of a polygon base on northing/easting coordinates
     internal fun calculateArea() {
         if (Northings.size >= 2) {
             var sum = 0.0
@@ -162,7 +168,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-
+        //undo plotting purpose
         fab.setOnClickListener { view ->
             if (points?.size ?: 0 > 1) {
                 val marker:Marker?= hashMapMarker[points?.size]
@@ -174,22 +180,25 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
                 polygon?.points = points
 
 
-
+                //update the area upon deleting corner of a polygon
                 calculateArea()
                 val df=DecimalFormat("##.####")
                 tvArea.text="Area: ${df.format(AreaOfPolygon)}m²"
             }
 
             else{
+                //remove the last marker in the map
                 val marker:Marker?= hashMapMarker[1]
                 marker?.remove()
                 hashMapMarker.remove(1)
-
+                //clear all list
                 points?.clear()
                 Eastings.clear()
                 Northings.clear()
-                tvArea.text=""
+
+                tvArea.text="Area: 0.0"
                 AreaOfPolygon=0.0
+                Toast.makeText(this, "No recent Plot, Please plot on the map by tapping the map",Toast.LENGTH_SHORT).show()
             }
         }
     }
