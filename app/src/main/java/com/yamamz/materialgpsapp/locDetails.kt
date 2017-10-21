@@ -125,25 +125,7 @@ class locDetails : FragmentActivity(), OnMapReadyCallback{
         mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(0.00, 0.00), 0f))
         mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID//set hybrid map tile
 
-mMap?.setOnMapClickListener { p0->
-    p0?.let { points?.add(it) }
-    if(!drawing){
-        mMap?.addMarker(p0?.let { MarkerOptions().position(it) }
-                ?.anchor(0.2f, 1.0f))
-
-        val rectOptions=PolygonOptions()
-                .strokeWidth(2f)
-                .fillColor(Color.BLUE)
-                .add(p0)
-        polygon = mMap?.addPolygon(rectOptions)
-        drawing = true
-    }
-
-    else {
-        polygon?.points = points
-    }
-}
-        async(UI) {
+      async(UI) {
             animateMapFlyGotoLoc(center)
         }
 
@@ -177,7 +159,7 @@ mMap?.setOnMapClickListener { p0->
         if (latLngList.size > 1) {
             val area = PolygonOptions().addAll(latLngList)
                     .strokeWidth(3f).strokeColor(Color.BLUE)
-                    .fillColor(Color.BLUE)
+                    .fillColor(0x7F00FF00)
             mMap?.addPolygon(area)
         } else {
             addMarker(mMap as GoogleMap, latLngList[0].latitude, latLngList[0].longitude, "You", fileName)

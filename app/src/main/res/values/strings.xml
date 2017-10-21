@@ -39,6 +39,7 @@
 
     <string name="location_updated">Location Updated: %1$s</string>
     <string name="launch_activity">Earth</string>
-    <string name="title_activity_plot">PlotActivity</string>
+    <string name="title_activity_plot">Manual Plotter</string>
+    <string name="plot_manually">Plot Manually</string>
 
 </resources>

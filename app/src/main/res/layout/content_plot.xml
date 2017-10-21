@@ -20,14 +20,17 @@
         tools:context="com.yamamz.materialgpsapp.PlotActivity" />
 
     <TextView
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="@color/white"
+        android:textSize="18sp"
         android:id="@+id/tvArea"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
         android:text=""
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginLeft="8dp" />
+        android:layout_marginRight="8dp" />
 
 </android.support.constraint.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.yamamz.materialgpsapp
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -32,6 +33,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
     internal var Eastings = ArrayList<Double>()
     private var AreaOfPolygon: Double=0.toDouble()
 
+    @SuppressLint("SetTextI18n")
     override fun onMapReady(p0: GoogleMap?) {
 
         mMap = p0
@@ -63,6 +65,21 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
                         .fillColor(0x7F00FF00)
                         .add(p0)
                 polygon = mMap?.addPolygon(rectOptions)
+
+                val convertUtm = CoordinateConversion()
+
+
+                val UTM = convertUtm.latLon2UTM(p0.latitude,p0.longitude)
+                val lastdot = UTM.lastIndexOf("-")
+                val E = UTM.substring(0, lastdot)
+                val N = UTM.substring(lastdot + 1, UTM.length)
+                var  EastingFormat = java.lang.Double.parseDouble(E)
+                var  NorthingFormat = java.lang.Double.parseDouble(N)
+                EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
+                NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
+
+                Northings.add(NorthingFormat)
+                Eastings.add(EastingFormat)
                 drawing = true
             } else {
                 polygon?.points = points
@@ -89,7 +106,8 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
                 calculateArea()
-                tvArea.text="$AreaOfPolygon"
+                val df=DecimalFormat("##.####")
+                tvArea.text="Area: ${df.format(AreaOfPolygon)}m²"
 
             }
         }
@@ -99,7 +117,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     internal fun calculateArea() {
-        if (Northings.size >= 3) {
+        if (Northings.size >= 2) {
             var sum = 0.0
             val area: Double
             val prodx = DoubleArray(Northings.size)
@@ -134,6 +152,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_plot)
@@ -157,15 +176,20 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
                 calculateArea()
-                tvArea.text="$AreaOfPolygon"
+                val df=DecimalFormat("##.####")
+                tvArea.text="Area: ${df.format(AreaOfPolygon)}m²"
             }
 
             else{
                 val marker:Marker?= hashMapMarker[1]
                 marker?.remove()
                 hashMapMarker.remove(1)
+
                 points?.clear()
+                Eastings.clear()
+                Northings.clear()
                 tvArea.text=""
+                AreaOfPolygon=0.0
             }
         }
     }

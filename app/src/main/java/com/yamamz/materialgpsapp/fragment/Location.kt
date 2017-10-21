@@ -159,7 +159,7 @@ class Location : Fragment() {
 
 
     internal fun calculateArea() {
-        if (Northings.size >= 3) {
+        if (Northings.size >= 2) {
             var sum = 0.0
             val area: Double
             val prodx = DoubleArray(Northings.size)

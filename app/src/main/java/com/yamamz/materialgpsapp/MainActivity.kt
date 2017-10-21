@@ -49,6 +49,7 @@ import java.util.ArrayList
 
 import io.realm.Realm
 import io.realm.RealmResults
+import kotlinx.android.synthetic.main.tab_layout.*
 
 /**
 * Created by Raymundo T. Melecio on 11/30/2016.
@@ -171,7 +172,13 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+btn_plot.setOnClickListener {
 
+    val intent=Intent(this,PlotActivity::class.java)
+
+   startActivity(intent)
+
+}
 
         }
 
@@ -293,6 +300,21 @@ class MainActivity : AppCompatActivity() {
                 fab?.startAnimation(animation)
             }
         }
+    }
+
+    fun changeDrawableFab(){
+
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                fab?.setImageDrawable(resources.getDrawable(R.mipmap.ic_launcher,this.theme))
+                Toast.makeText(this,"test",Toast.LENGTH_LONG).show()
+
+                    } else {
+                fab?.setImageDrawable(resources.getDrawable(R.mipmap.ic_launcher))
+                Toast.makeText(this,"test",Toast.LENGTH_LONG).show()
+            }
+
+
     }
 
     @SuppressLint("ObsoleteSdkInt")
