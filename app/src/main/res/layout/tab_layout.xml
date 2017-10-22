@@ -219,10 +219,10 @@
 		android:layout_gravity="bottom|end"/>
 
 	<Button
+		android:background="@drawable/ripple_background"
 		android:id="@+id/btn_plot"
 		style="@style/Widget.AppCompat.Button.Colored"
 		android:text="@string/plot_manually"
-		android:src="@mipmap/ic_launcher"
 		android:layout_gravity="bottom|end"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content" />
