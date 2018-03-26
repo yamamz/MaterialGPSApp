@@ -304,20 +304,7 @@ btn_plot.setOnClickListener {
         }
     }
 
-    fun changeDrawableFab(){
 
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                fab?.setImageDrawable(resources.getDrawable(R.mipmap.ic_launcher,this.theme))
-                Toast.makeText(this,"test",Toast.LENGTH_LONG).show()
-
-                    } else {
-                fab?.setImageDrawable(resources.getDrawable(R.mipmap.ic_launcher))
-                Toast.makeText(this,"test",Toast.LENGTH_LONG).show()
-            }
-
-
-    }
 
     @SuppressLint("ObsoleteSdkInt")
     fun showFab() {
@@ -384,8 +371,6 @@ btn_plot.setOnClickListener {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mMessageReceiver, IntentFilter("getlocation"))
 
-
-
     }
     override fun onDestroy() {
         super.onDestroy()
@@ -424,7 +409,7 @@ btn_plot.setOnClickListener {
             googleApiClient?.connect()
 
             val locationRequest = LocationRequest.create()
-            locationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             locationRequest.interval = (30 * 1000).toLong()
             locationRequest.fastestInterval = (5 * 1000).toLong()
             val builder = LocationSettingsRequest.Builder()

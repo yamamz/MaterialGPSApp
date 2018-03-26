@@ -21,7 +21,6 @@ android {
         }
     }
 
-
 }
 
 dependencies {
@@ -44,9 +43,12 @@ dependencies {
     implementation "org.jetbrains.anko:anko-coroutines:0.10.1"
     testImplementation 'junit:junit:4.12'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation 'com.github.clans:fab:1.6.4'
+
 }
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
     google()
 }
 kotlin {

@@ -9,6 +9,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 
 import com.yamamz.materialgpsapp.MainActivity
 import com.yamamz.materialgpsapp.R
@@ -50,6 +52,8 @@ class SaveLocationsFragment : Fragment() {
         // Inflate the layout for this fragment
         return RootView
     }
+
+
 
     private fun setupRecyclerView() {
         recyclerView = RootView?.findViewById<View>(R.id.recycleView) as RecyclerView

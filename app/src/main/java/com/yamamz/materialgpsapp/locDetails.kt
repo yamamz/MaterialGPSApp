@@ -117,11 +117,23 @@ class locDetails : FragmentActivity(), OnMapReadyCallback{
         System.gc()
     }
 
+    fun getPolygonCenterPoint(polygonPointsList: ArrayList<LatLng>?): LatLng {
+        var centerLatLng: LatLng? = null
+        val builder = LatLngBounds.Builder()
+        polygonPointsList?.forEach {
+            builder.include(it)
+        }
+
+        val bounds = builder.build()
+        centerLatLng = bounds.center
+
+        return centerLatLng
+    }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         //move the camera to the center of the map before going to the target location
-        val center = LatLng(latLngList[0].latitude, latLngList[0].longitude)
+        val center =getPolygonCenterPoint(latLngList)
         mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(0.00, 0.00), 0f))
         mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID//set hybrid map tile
 
@@ -146,7 +158,7 @@ class locDetails : FragmentActivity(), OnMapReadyCallback{
         delay(1500)
         val position = CameraPosition.Builder()
                 .target(loc) // Sets the new camera position
-                .zoom(19f) // Sets the zoom
+                .zoom(21f) // Sets the zoom
                 .bearing(0f) // Rotate the camera
                 .tilt(30f)// Set the camera tilt
                 .build()// Creates a CameraPosition from the builder
