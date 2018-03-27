@@ -158,7 +158,7 @@ class locDetails : FragmentActivity(), OnMapReadyCallback{
         delay(1500)
         val position = CameraPosition.Builder()
                 .target(loc) // Sets the new camera position
-                .zoom(21f) // Sets the zoom
+                .zoom(16f) // Sets the zoom
                 .bearing(0f) // Rotate the camera
                 .tilt(30f)// Set the camera tilt
                 .build()// Creates a CameraPosition from the builder

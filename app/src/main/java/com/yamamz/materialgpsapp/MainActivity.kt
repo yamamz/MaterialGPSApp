@@ -48,8 +48,8 @@ import com.yamamz.materialgpsapp.service.locationService
 import java.util.ArrayList
 
 import io.realm.Realm
-import io.realm.RealmResults
 import kotlinx.android.synthetic.main.tab_layout.*
+
 
 /**
 * Created by Raymundo T. Melecio on 11/30/2016.
@@ -63,12 +63,14 @@ class MainActivity : AppCompatActivity() {
     private var Northing: TextView? = null
     private var Easting: TextView? = null
     private var isFabShowing = true
+    private var isFabRefreshShowing = true
     private var LatitudeText: TextView? = null
     private var LongittudeText: TextView? = null
     private var Elevation: TextView? = null
     private var Speed: TextView? = null
     private var AcuracyText: TextView? = null
     private var fab: FloatingActionButton? = null
+    private var fabRefresh: FloatingActionButton? = null
     var googleApiClient: GoogleApiClient? = null
     val REQUEST_LOCATION = 199
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
@@ -86,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         get() = java.lang.Double.parseDouble(Elevation?.text.toString())
 
     private var locationFragment: Location? = null
+    private var saveLocationFragment: SaveLocationsFragment?=null
     private var realm: Realm? = null
     //Broadcast receiver coming from a service that receives each time it will pass an intent
     private val mMessageReceiver = object : BroadcastReceiver() {
@@ -145,6 +148,13 @@ class MainActivity : AppCompatActivity() {
             locationFragment?.addLocation()
 
         }
+
+        fabRefresh?.setOnClickListener {
+            val saveFagment = this@MainActivity
+                    .supportFragmentManager
+                    .findFragmentByTag(tabLocationSave) as SaveLocationsFragment
+            saveFagment.loadlocationsDatabase()
+        }
         //for getting gps service status
         val manager = this@MainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         //check if the device has gps support
@@ -196,6 +206,7 @@ btn_plot.setOnClickListener {
 
 
     internal fun initialize() {
+        fabRefresh=findViewById(R.id.fab_refresh)
         fab = findViewById(R.id.fab)
         Northing = findViewById(R.id.longitude)
         Easting = findViewById(R.id.easting)
@@ -204,6 +215,8 @@ btn_plot.setOnClickListener {
         Elevation = findViewById(R.id.elevation)
         AcuracyText = findViewById(R.id.acu)
         Speed = findViewById(R.id.speed)
+
+        hideFabRefresh()
     }
 
     private class Adapter internal constructor(fm: FragmentManager) : FragmentPagerAdapter(fm) {
@@ -274,6 +287,7 @@ btn_plot.setOnClickListener {
 
     @SuppressLint("ObsoleteSdkInt")
     fun hideFab() {
+
         if (isFabShowing && fab != null) {
             isFabShowing = false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -300,14 +314,16 @@ btn_plot.setOnClickListener {
                     }
                 })
                 fab?.startAnimation(animation)
+
             }
+
+
         }
     }
 
-
-
     @SuppressLint("ObsoleteSdkInt")
     fun showFab() {
+
         if (!isFabShowing && fab != null) {
             isFabShowing = true
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -326,8 +342,69 @@ btn_plot.setOnClickListener {
                 })
                 fab?.startAnimation(animation)
             }
+
+
         }
     }
+
+
+    @SuppressLint("ObsoleteSdkInt")
+    fun hideFabRefresh() {
+        Log.e("error" ,"Success")
+        if (isFabRefreshShowing && fabRefresh != null) {
+            isFabRefreshShowing = false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                val point = Point()
+                this.window.windowManager.defaultDisplay.getSize(point)
+                val translation = fabRefresh?.y?.minus(point.y)
+                if (translation != null) {
+                    fabRefresh?.animate()?.translationYBy(-translation)?.start()
+                }
+            } else {
+                val animation = AnimationUtils.makeOutAnimation(this, true)
+                animation.fillAfter = true
+                animation.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(animation: Animation) {
+
+                    }
+
+                    override fun onAnimationEnd(animation: Animation) {
+                        fabRefresh?.isClickable = false
+                    }
+
+                    override fun onAnimationRepeat(animation: Animation) {
+
+                    }
+                })
+                fabRefresh?.startAnimation(animation)
+            }
+        }
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    fun showFabRefresh() {
+        Log.e("error" ,"Success")
+        if (!isFabRefreshShowing && fabRefresh != null) {
+            isFabRefreshShowing = true
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                fabRefresh?.animate()?.translationY(0f)?.start()
+            } else {
+                val animation = AnimationUtils.makeInAnimation(this, false)
+                animation.fillAfter = true
+                animation.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(animation: Animation) {}
+
+                    override fun onAnimationEnd(animation: Animation) {
+                        fabRefresh?.isClickable = true
+                    }
+
+                    override fun onAnimationRepeat(animation: Animation) {}
+                })
+                fabRefresh?.startAnimation(animation)
+            }
+        }
+    }
+
 
 
     fun deletelocation(filename: String) {

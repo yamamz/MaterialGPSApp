@@ -10,6 +10,7 @@ import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,6 +35,7 @@ import io.realm.Realm
 import io.realm.RealmList
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_plot.*
+import kotlinx.android.synthetic.main.fragment_location.*
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
@@ -244,7 +246,7 @@ class Location : Fragment() {
                     }
                 }
             }, Realm.Transaction.OnSuccess {
-                Toast.makeText(activity, "Save Successfully", Toast.LENGTH_SHORT).show()
+
                 val dateFormat= SimpleDateFormat("yyyy-MM-dd")
                 val now= Date()
                 val file_name=dateFormat.format(now)
@@ -283,7 +285,7 @@ class Location : Fragment() {
 
             writer.flush()
             writer.close()
-            Snackbar.make(drawer_layout, "Saved to".plus(root.absolutePath), Snackbar.LENGTH_LONG)
+            Snackbar.make(f_location, "Saved and exported csv to".plus(root.absolutePath), Snackbar.LENGTH_LONG)
                     .setAction("OK", {
 
                     })
@@ -384,13 +386,18 @@ class Location : Fragment() {
 
             try {
                 (activity as MainActivity).showFab()
-            } catch (ignore: Exception) {
+                (activity as MainActivity).hideFabRefresh()
+            } catch (e: Exception) {
+
+                Log.e("error" ,e.message)
             }
 
         } else {
             try {
                 (activity as MainActivity).hideFab()
-            } catch (ignore: Exception) {
+               (activity as MainActivity).showFabRefresh()
+            } catch (e: Exception) {
+                Log.e("error" ,e.message)
             }
 
         }

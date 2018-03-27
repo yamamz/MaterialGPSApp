@@ -1,22 +1,28 @@
 package com.yamamz.materialgpsapp
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
+import android.os.Handler
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
+import android.view.ContextThemeWrapper
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import com.afollestad.materialdialogs.MaterialDialog
+import com.github.clans.fab.FloatingActionMenu
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.places.Place
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -40,14 +46,13 @@ import kotlin.collections.ArrayList
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolygonOptions
 import com.yamamz.materialgpsapp.model.LocationModel
+import com.yamamz.materialgpsapp.model.MapObject
 import com.yamamz.materialgpsapp.model.SaveLocation
 import com.yamamz.materialgpsapp.plotMVP.PlotMVP
 import com.yamamz.materialgpsapp.plotMVP.PlotPresenter
 import io.realm.Realm
 import io.realm.RealmList
-import java.io.File
-import java.io.FileWriter
-import java.io.IOException
+
 import java.text.SimpleDateFormat
 
 
@@ -67,6 +72,20 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
     private var isFabShowing = true
     private val presenter = PlotPresenter(this)
 
+    private var menus:ArrayList<FloatingActionMenu>?  = java.util.ArrayList()
+    private val mUiHandler = Handler()
+    private var latLngs= ArrayList<LatLng>()
+    private var mapObjects= ArrayList<MapObject>()
+
+    override fun clearAllvalues() {
+        tvArea.text = "Area: 0.0"
+        AreaOfPolygon = 0.0
+        hashMapMarker.clear()
+        //clear all list
+        points?.clear()
+        Eastings.clear()
+        Northings.clear()
+    }
 
     override fun putMarkerOnMap(p0: LatLng?) {
         val mDotMarkerBitmap = createBitmapMarker()
@@ -74,6 +93,20 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                 ?.icon(BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap))
                 ?.anchor(0.5f, 0.5f))
 
+    }
+
+    override fun addNorthingEasting(northingFormat: Double, eastingFormat: Double) {
+        Northings.add(northingFormat)
+        Eastings.add(eastingFormat)
+           }
+
+
+    override fun showSnackbar(msg: String) {
+        Snackbar.make(coordinator,msg , Snackbar.LENGTH_LONG)
+                .setAction("OK", {
+                })
+                .setActionTextColor(Color.RED)
+                .show()
     }
 
     fun createBitmapMarker(): Bitmap {
@@ -104,15 +137,8 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
         }
         if (points != null) {
             //presenter.setTextArea()
-            tvArea.text = "Area: 0.0"
-            AreaOfPolygon = 0.0
-            hashMapMarker.clear()
-            //clear all list
-            points?.clear()
-            Eastings.clear()
-            Northings.clear()
+            presenter.clearAllvalues()
             mMap?.clear()
-
             presenter.drawShape(p0?.latLng)
 
             //add the first point to the list
@@ -122,11 +148,10 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             //put the marker the hashmap for removing purpose
             marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
 
-
             val recOptions = createRecOption(p0?.latLng)
             polygon = mMap?.addPolygon(recOptions)
 
-            convertWGSToUTM(p0?.latLng)
+            presenter.convertWGSToUTM(p0?.latLng)
 
             //setting true so the logic determines that the second marker is not the first
             firstPoint = true
@@ -142,7 +167,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             polygon = mMap?.addPolygon(createRecOption(p0?.latLng))
 
             //convert wgs84 to UTM projection
-            convertWGSToUTM(p0?.latLng)
+            presenter.convertWGSToUTM(p0?.latLng)
 
             firstPoint = true
         }
@@ -156,28 +181,14 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
         }
     }
 
-    private fun convertWGSToUTM(p0: LatLng?) {
-        val convertUtm = CoordinateConversion()
-        val UTM = p0?.latitude?.let { p0?.longitude?.let { it1 -> convertUtm.latLon2UTM(it, it1) } }
-        val lastdot = UTM?.lastIndexOf("-")
-        val E = lastdot?.let { UTM.substring(0, it) }
-        val N = UTM?.length?.let { lastdot?.plus(1)?.let { it1 -> UTM.substring(it1, it) } }
-        var EastingFormat = java.lang.Double.parseDouble(E)
-        var NorthingFormat = java.lang.Double.parseDouble(N)
-        EastingFormat = Math.round(EastingFormat * 10000.0) / 10000.0
-        NorthingFormat = Math.round(NorthingFormat * 10000.0) / 10000.0
 
-        //add the northing and easting to its list
-        Northings.add(NorthingFormat)
-        Eastings.add(EastingFormat)
-    }
 
-    override fun animateMapFlyGotoLoc(loc: LatLng?) {
+    override fun animateMapFlyGotoLoc(latLng: LatLng?) {
         //pause the map so that it will load and sees the flying animation
         async(UI) {
             delay(1500)
             val position = CameraPosition.Builder()
-                    .target(loc) // Sets the new camera position
+                    .target(latLng) // Sets the new camera position
                     .zoom(19f) // Sets the zoom
                     .bearing(0f) // Rotate the camera
                     .tilt(30f)// Set the camera tilt
@@ -225,7 +236,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                 polygon = mMap?.addPolygon(rectOptions)
 
                 //convert wgs84 to UTM projection
-                convertWGSToUTM(point)
+                presenter.convertWGSToUTM(point)
                 firstPoint = true
                 showFab()
 
@@ -238,7 +249,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                 marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
 
                 //convert wgs84 to UTM projection
-                convertWGSToUTM(point)
+                presenter.convertWGSToUTM(point)
 
 
                 val area = calculateArea()
@@ -302,31 +313,48 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        //val context = ContextThemeWrapper(this, R.style.MenuButtonsStyle)
+
+        menu_green?.hideMenuButton(false)
+        menus?.add(menu_green)
+
+        var delay = 400
+       menus?.forEach {
+            mUiHandler.postDelayed(Runnable { it.showMenuButton(true) }, delay.toLong())
+            delay += 150
+        }
+
+
+
+        createCustomAnimation()
 
         fab_check.setOnClickListener { view ->
-            val finish_points: ArrayList<LatLng>? = ArrayList()
+           val  fin_points=ArrayList<LatLng>()
 
             points?.forEach {
-                finish_points?.add(LatLng(it.latitude, it.longitude))
-
+                fin_points.add(LatLng(it.latitude, it.longitude))
             }
+
             if (points?.size != 0) {
 
                 val rectOptions = PolygonOptions()
                         .strokeWidth(4f)
                         .fillColor(0x7F00FF00)
-                        .add(finish_points?.get(0)?.latitude?.let { LatLng(it, finish_points[0].longitude) })
+                        .add( fin_points[0].latitude.let { LatLng(it,  fin_points[0].longitude) })
                 polygon = mMap?.addPolygon(rectOptions)
-                polygon?.points = finish_points
+                polygon?.points = fin_points
 
                 hideFab()
                 removeMarkers()
 
-                Saveloc(finish_points)
 
 
+                //Saveloc(finish_points)
 
             }
+
+            val mapObject = MapObject(fin_points)
+            mapObjects.add(mapObject)
 
 
 
@@ -338,12 +366,32 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             Eastings.clear()
             Northings.clear()
 
-            //mMap?.clear()
-            //Toast.makeText(this, finish_points?.size.toString(),Toast.LENGTH_SHORT).show()
 
 
         }
+fab_export.setOnClickListener {
+    var filename: CharSequence? = null
+    if ( mapObjects.size >= 1)
+        MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
 
+        ) { dialog, input ->
+            filename = input
+
+            if (filename?.length?:0 > 0) {
+             //loop each object to get each arrayList of LatLong
+             mapObjects.forEach {
+                 //random the current date int for unique value
+
+                 presenter.generateCSV(filename.toString(),it.latLngList)
+
+                 //generateCSVOnSD(filename.toString().plus(intDate).plus("WGS_84.csv"),it.latLngList)
+
+                }
+
+            }
+
+        }.show()
+}
 
 
         //undo plotting purpose
@@ -351,14 +399,13 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
 
             if (points?.size ?: 0 > 0) {
                 val marker: Marker? = hashMapMarker[points?.size]
-                Toast.makeText(this, hashMapMarker?.size.toString(), Toast.LENGTH_SHORT).show()
                 marker?.remove()
                 hashMapMarker.remove(points?.size)
                 Northings.size.minus(1).let { Northings.removeAt(it) }
                 Eastings.size.minus(1).let { Eastings.removeAt(it) }
                 points?.size?.minus(1)?.let { points?.removeAt(it) }
 
-                //Toast.makeText(this, points?.size.toString(),Toast.LENGTH_SHORT).show()
+
                 //update the area upon deleting corner of a polygon
                 calculateArea()
 
@@ -377,41 +424,41 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             } else {
                 marker?.remove()
 
-
-                Toast.makeText(this, "No recent Plot, Please plot on the map by tapping the map", Toast.LENGTH_SHORT).show()
-            }
+                 }
         }
     }
 
-    fun generateCSVOnSD(context: Context, sFileName:String , sBody:ArrayList<LatLng>? ) {
 
-        try {
-            val root = File(Environment.getExternalStorageDirectory(), "CSV")
-            if (!root.exists()) {
-                root.mkdirs()
+    fun createCustomAnimation() {
+        val set = AnimatorSet()
+
+        val scaleOutX = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleX", 1.0f, 0.2f)
+        val scaleOutY = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleY", 1.0f, 0.2f)
+        val scaleInX = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleX", 0.2f, 1.0f)
+        val scaleInY = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleY", 0.2f, 1.0f)
+
+        scaleOutX.duration = 50
+        scaleOutY.duration = 50
+
+        scaleInX.duration = 150
+        scaleInY.duration = 150
+
+        scaleInX.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator) {
+                menu_green?.menuIconView?.setImageResource(if (menu_green.isOpened)
+                    R.drawable.ic_close_white_24dp
+                else
+                    R.drawable.fab_add)
             }
+        })
 
-            val csvfile = File(root,sFileName)
-            val writer = FileWriter(csvfile)
-            writer.append("Latitude,Longitude \n")
-            sBody?.forEach{
-                writer.append(it.latitude.toString().plus(",".plus(it.longitude).plus("\n")))
-            }
-
-            writer.flush()
-            writer.close()
-            Snackbar.make(coordinator, "Saved to".plus(root.absolutePath), Snackbar.LENGTH_LONG)
-                    .setAction("OK", {
-
-                    })
-                    .setActionTextColor(Color.RED)
-                    .show()
-
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-
+        set.play(scaleOutX).with(scaleOutY)
+        set.play(scaleInX).with(scaleInY).after(scaleOutX)
+        set.interpolator = OvershootInterpolator(2f)
+        menu_green.iconToggleAnimatorSet = set
     }
+
+
 
     @SuppressLint("ObsoleteSdkInt")
     fun hideFab() {
@@ -489,6 +536,8 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
 
                 if (filename?.length?:0 > 0) {
        val locationList = RealmList<LocationModel>()
+
+                    //lop the finish point to store in rearlmList for saving pupose
                    finish_points?.forEach {
                         var x=0.0
                         val location = LocationModel(it.latitude,
@@ -496,7 +545,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                         locationList.add(location)
                         x += 1
 
-                    }
+                    }//call save function
                     save(filename,locationList,finish_points)
                 }
 
@@ -504,6 +553,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
     }
 
     internal fun save(filename:CharSequence?,locationList:RealmList<LocationModel>,finish_points:ArrayList<LatLng>?) {
+        calculateArea()
         val area = AreaOfPolygon
         val saveLocation = SaveLocation(filename?.toString(), locationList, area)
         val realm = Realm.getDefaultInstance()
@@ -519,14 +569,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                     }
                 }
             }, Realm.Transaction.OnSuccess {
-                Toast.makeText(this, "Save Successfully", Toast.LENGTH_SHORT).show()
-                val dateFormat= SimpleDateFormat("yyyy-MM-dd")
-                val now= Date()
-                val file_name=dateFormat.format(now)
-                generateCSVOnSD(this,filename.toString().plus(file_name.plus("WGS_84.csv")),finish_points)
-                //addlocation()
-                //locationList.clear()
-
+                presenter.showSnackBar("Save Succesfully")
 
             })
 
