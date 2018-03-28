@@ -11,13 +11,6 @@
 
     <include layout="@layout/content_plot" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_check"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_save_white_18dp" />
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/menu_green"
@@ -57,6 +50,25 @@
             android:src="@drawable/ic_save_white_18dp"
             fab:fab_label="save"
             style="@style/MenuButtonsSmall.Green" />
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_check_white_24dp"
+            fab:fab_label="finish current plot"
+            style="@style/MenuButtonsSmall.Green" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_gpsTracks"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_add_location_white_24dp"
+            fab:fab_label="Track a location"
+            style="@style/MenuButtonsSmall.Green" />
+
+
+
+
 
     </com.github.clans.fab.FloatingActionMenu>
 

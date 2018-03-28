@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -238,7 +239,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                 //convert wgs84 to UTM projection
                 presenter.convertWGSToUTM(point)
                 firstPoint = true
-                showFab()
+                //showFab()
 
             } else {
                 //update polygon shape base on latLong
@@ -256,7 +257,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
 
                 val df = DecimalFormat("##.####")
                 tvArea.text = "Area: ${df.format(area)} m²"
-                showFab()
+                //showFab()
 
             }
         }
@@ -324,9 +325,33 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             delay += 150
         }
 
-
-
         createCustomAnimation()
+
+        fab_save.setOnClickListener {
+
+            var filename: CharSequence? = null
+            if (mapObjects.size>= 1)
+                MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
+
+                ) { dialog, input ->
+                    filename = input
+
+                    if (filename?.length?:0 > 0) {
+
+                        mapObjects.forEachIndexed {i,e->
+
+                            Saveloc(e.latLngList,filename.toString(),i,e.area)
+
+                        }
+
+
+                    }
+
+                }.show()
+
+                        //loop each object to get each arrayList of LatLong
+
+        }
 
         fab_check.setOnClickListener { view ->
            val  fin_points=ArrayList<LatLng>()
@@ -344,30 +369,23 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
                 polygon = mMap?.addPolygon(rectOptions)
                 polygon?.points = fin_points
 
-                hideFab()
+               // hideFab()
                 removeMarkers()
+                val area=calculateArea()
+                val mapObject = MapObject(fin_points,area)
+                mapObjects.add(mapObject)
 
-
-
-                //Saveloc(finish_points)
+                presenter.clearAllvalues()
 
             }
 
-            val mapObject = MapObject(fin_points)
-            mapObjects.add(mapObject)
 
+        }
 
+        fab_gpsTracks.setOnClickListener {
 
-            tvArea.text = "Area: 0.0"
-            AreaOfPolygon = 0.0
-            hashMapMarker.clear()
-            //clear all list
-            points?.clear()
-            Eastings.clear()
-            Northings.clear()
-
-
-
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
         }
 fab_export.setOnClickListener {
     var filename: CharSequence? = null
@@ -439,7 +457,6 @@ fab_export.setOnClickListener {
 
         scaleOutX.duration = 50
         scaleOutY.duration = 50
-
         scaleInX.duration = 150
         scaleInY.duration = 150
 
@@ -460,61 +477,61 @@ fab_export.setOnClickListener {
 
 
 
-    @SuppressLint("ObsoleteSdkInt")
-    fun hideFab() {
-        if (isFabShowing && fab_check != null) {
-            isFabShowing = false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                val point = Point()
-                this.window.windowManager.defaultDisplay.getSize(point)
-                val translation = fab_check?.y?.minus(point.y)
-                if (translation != null) {
-                    fab_check?.animate()?.translationYBy(-translation)?.start()
-                }
-            } else {
-                val animation = AnimationUtils.makeOutAnimation(this, true)
-                animation.fillAfter = true
-                animation.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation) {
-
-                    }
-
-                    override fun onAnimationEnd(animation: Animation) {
-                        fab_check?.isClickable = false
-                    }
-
-                    override fun onAnimationRepeat(animation: Animation) {
-
-                    }
-                })
-                fab?.startAnimation(animation)
-            }
-        }
-    }
-
-
-    @SuppressLint("ObsoleteSdkInt")
-    fun showFab() {
-        if (!isFabShowing && fab_check != null) {
-            isFabShowing = true
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                fab_check?.animate()?.translationY(0f)?.start()
-            } else {
-                val animation = AnimationUtils.makeInAnimation(this, false)
-                animation.fillAfter = true
-                animation.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation) {}
-
-                    override fun onAnimationEnd(animation: Animation) {
-                        fab_check?.isClickable = true
-                    }
-
-                    override fun onAnimationRepeat(animation: Animation) {}
-                })
-                fab_check?.startAnimation(animation)
-            }
-        }
-    }
+//    @SuppressLint("ObsoleteSdkInt")
+//    fun hideFab() {
+//        if (isFabShowing && fab_check != null) {
+//            isFabShowing = false
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                val point = Point()
+//                this.window.windowManager.defaultDisplay.getSize(point)
+//                val translation = fab_check?.y?.minus(point.y)
+//                if (translation != null) {
+//                    fab_check?.animate()?.translationYBy(-translation)?.start()
+//                }
+//            } else {
+//                val animation = AnimationUtils.makeOutAnimation(this, true)
+//                animation.fillAfter = true
+//                animation.setAnimationListener(object : Animation.AnimationListener {
+//                    override fun onAnimationStart(animation: Animation) {
+//
+//                    }
+//
+//                    override fun onAnimationEnd(animation: Animation) {
+//                        fab_check?.isClickable = false
+//                    }
+//
+//                    override fun onAnimationRepeat(animation: Animation) {
+//
+//                    }
+//                })
+//                fab?.startAnimation(animation)
+//            }
+//        }
+//    }
+//
+//
+//    @SuppressLint("ObsoleteSdkInt")
+//    fun showFab() {
+//        if (!isFabShowing && fab_check != null) {
+//            isFabShowing = true
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                fab_check?.animate()?.translationY(0f)?.start()
+//            } else {
+//                val animation = AnimationUtils.makeInAnimation(this, false)
+//                animation.fillAfter = true
+//                animation.setAnimationListener(object : Animation.AnimationListener {
+//                    override fun onAnimationStart(animation: Animation) {}
+//
+//                    override fun onAnimationEnd(animation: Animation) {
+//                        fab_check?.isClickable = true
+//                    }
+//
+//                    override fun onAnimationRepeat(animation: Animation) {}
+//                })
+//                fab_check?.startAnimation(animation)
+//            }
+//        }
+//    }
 
 
 
@@ -525,36 +542,25 @@ fab_export.setOnClickListener {
         hashMapMarker.clear()
     }
 
-    fun Saveloc(finish_points:ArrayList<LatLng>?) {
+    fun Saveloc(finish_points:ArrayList<LatLng>?,filename:String,counter:Int,area:Double) {
 
-   var filename: CharSequence? = null
-        if (finish_points?.size?:0 >= 1)
-            MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
+        val locationList = RealmList<LocationModel>()
 
-            ) { dialog, input ->
-                filename = input
+        //lop the finish point to store in rearlmList for saving pupose
+        finish_points?.forEachIndexed {i,it->
 
-                if (filename?.length?:0 > 0) {
-       val locationList = RealmList<LocationModel>()
+            val location = LocationModel(it.latitude,
+                    it.longitude,(i+1).toString(),0.0)
+            locationList.add(location)
 
-                    //lop the finish point to store in rearlmList for saving pupose
-                   finish_points?.forEach {
-                        var x=0.0
-                        val location = LocationModel(it.latitude,
-                               it.longitude,x.toString(),0.0)
-                        locationList.add(location)
-                        x += 1
 
-                    }//call save function
-                    save(filename,locationList,finish_points)
-                }
+        }//call save function
 
-            }.show()
+        save(filename.plus("-").plus(counter),locationList,area)
     }
 
-    internal fun save(filename:CharSequence?,locationList:RealmList<LocationModel>,finish_points:ArrayList<LatLng>?) {
-        calculateArea()
-        val area = AreaOfPolygon
+    private fun save(filename:CharSequence?, locationList:RealmList<LocationModel>,area: Double) {
+
         val saveLocation = SaveLocation(filename?.toString(), locationList, area)
         val realm = Realm.getDefaultInstance()
         try {

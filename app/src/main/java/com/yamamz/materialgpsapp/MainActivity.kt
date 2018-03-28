@@ -1,10 +1,14 @@
 package com.yamamz.materialgpsapp
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
-import android.app.ProgressDialog
+
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Point
@@ -12,6 +16,7 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.provider.Settings
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.CollapsingToolbarLayout
@@ -30,23 +35,20 @@ import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
+import android.view.animation.OvershootInterpolator
+
 import android.widget.TextView
 import android.widget.Toast
+import com.github.clans.fab.FloatingActionMenu
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-
 import com.yamamz.materialgpsapp.fragment.Location
 import com.yamamz.materialgpsapp.fragment.SaveLocationsFragment
 import com.yamamz.materialgpsapp.model.SaveLocation
 import com.yamamz.materialgpsapp.service.locationService
-
 import java.util.ArrayList
-
 import io.realm.Realm
 import kotlinx.android.synthetic.main.tab_layout.*
 
@@ -69,11 +71,12 @@ class MainActivity : AppCompatActivity() {
     private var Elevation: TextView? = null
     private var Speed: TextView? = null
     private var AcuracyText: TextView? = null
-    private var fab: FloatingActionButton? = null
-    private var fabRefresh: FloatingActionButton? = null
+
     var googleApiClient: GoogleApiClient? = null
     val REQUEST_LOCATION = 199
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
+    private var menus:ArrayList<FloatingActionMenu>?  = java.util.ArrayList()
+    private val mUiHandler = Handler()
 
 
     val lat: Double?
@@ -118,6 +121,19 @@ class MainActivity : AppCompatActivity() {
         realm = Realm.getDefaultInstance()
         initialize()
 
+        menu_track?.hideMenuButton(false)
+        menus?.add(menu_track)
+
+        var delay = 400
+        menus?.forEach {
+            mUiHandler.postDelayed(Runnable { it.showMenuButton(true) }, delay.toLong())
+            delay += 150
+        }
+
+
+
+        createCustomAnimation()
+
         val viewPager = findViewById<ViewPager>(R.id.viewpager)
         if (viewPager != null) {
             setupViewPager(viewPager)
@@ -131,6 +147,8 @@ class MainActivity : AppCompatActivity() {
         collapsingToolbar.title = " "
         val mAppBarLayout = findViewById<AppBarLayout>(R.id.appbar)
 
+
+
         mAppBarLayout.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             if (verticalOffset == -collapsingToolbar.height + toolbar.height) {
                 collapsingToolbar.title = "GPS"
@@ -140,7 +158,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        fab?.setOnClickListener { view ->
+        fab_track.setOnClickListener { view ->
             //for adding locations to fragment
             locationFragment = this@MainActivity
                     .supportFragmentManager
@@ -149,7 +167,7 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        fabRefresh?.setOnClickListener {
+        fab_refresh.setOnClickListener {
             val saveFagment = this@MainActivity
                     .supportFragmentManager
                     .findFragmentByTag(tabLocationSave) as SaveLocationsFragment
@@ -184,14 +202,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-btn_plot.setOnClickListener {
-
-    val intent=Intent(this,PlotActivity::class.java)
-
-   startActivity(intent)
-
-}
-
         }
 
 
@@ -204,10 +214,36 @@ btn_plot.setOnClickListener {
 
     }
 
+    fun createCustomAnimation() {
+        val set = AnimatorSet()
+        val scaleOutX = ObjectAnimator.ofFloat(menu_track.menuIconView, "scaleX", 1.0f, 0.2f)
+        val scaleOutY = ObjectAnimator.ofFloat(menu_track.menuIconView, "scaleY", 1.0f, 0.2f)
+        val scaleInX = ObjectAnimator.ofFloat(menu_track.menuIconView, "scaleX", 0.2f, 1.0f)
+        val scaleInY = ObjectAnimator.ofFloat(menu_track.menuIconView, "scaleY", 0.2f, 1.0f)
+
+        scaleOutX.duration = 50
+        scaleOutY.duration = 50
+        scaleInX.duration = 150
+        scaleInY.duration = 150
+
+        scaleInX.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator) {
+                menu_track?.menuIconView?.setImageResource(if (menu_track.isOpened)
+                    R.drawable.ic_close_white_24dp
+                else
+                    R.drawable.fab_add)
+            }
+        })
+
+        set.play(scaleOutX).with(scaleOutY)
+        set.play(scaleInX).with(scaleInY).after(scaleOutX)
+        set.interpolator = OvershootInterpolator(2f)
+        menu_track.iconToggleAnimatorSet = set
+    }
+
 
     internal fun initialize() {
-        fabRefresh=findViewById(R.id.fab_refresh)
-        fab = findViewById(R.id.fab)
+
         Northing = findViewById(R.id.longitude)
         Easting = findViewById(R.id.easting)
         LatitudeText = findViewById(R.id.latitude)
@@ -216,7 +252,6 @@ btn_plot.setOnClickListener {
         AcuracyText = findViewById(R.id.acu)
         Speed = findViewById(R.id.speed)
 
-        hideFabRefresh()
     }
 
     private class Adapter internal constructor(fm: FragmentManager) : FragmentPagerAdapter(fm) {
@@ -286,124 +321,124 @@ btn_plot.setOnClickListener {
     }
 
     @SuppressLint("ObsoleteSdkInt")
-    fun hideFab() {
+//    fun hideFab() {
+//
+//        if (isFabShowing && fab != null) {
+//            isFabShowing = false
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                val point = Point()
+//                this.window.windowManager.defaultDisplay.getSize(point)
+//                val translation = fab?.y?.minus(point.y)
+//                if (translation != null) {
+//                    fab?.animate()?.translationYBy(-translation)?.start()
+//                }
+//            } else {
+//                val animation = AnimationUtils.makeOutAnimation(this, true)
+//                animation.fillAfter = true
+//                animation.setAnimationListener(object : Animation.AnimationListener {
+//                    override fun onAnimationStart(animation: Animation) {
+//
+//                    }
+//
+//                    override fun onAnimationEnd(animation: Animation) {
+//                        fab?.isClickable = false
+//                    }
+//
+//                    override fun onAnimationRepeat(animation: Animation) {
+//
+//                    }
+//                })
+//                fab?.startAnimation(animation)
+//
+//            }
+//
+//
+//        }
+//    }
 
-        if (isFabShowing && fab != null) {
-            isFabShowing = false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                val point = Point()
-                this.window.windowManager.defaultDisplay.getSize(point)
-                val translation = fab?.y?.minus(point.y)
-                if (translation != null) {
-                    fab?.animate()?.translationYBy(-translation)?.start()
-                }
-            } else {
-                val animation = AnimationUtils.makeOutAnimation(this, true)
-                animation.fillAfter = true
-                animation.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation) {
-
-                    }
-
-                    override fun onAnimationEnd(animation: Animation) {
-                        fab?.isClickable = false
-                    }
-
-                    override fun onAnimationRepeat(animation: Animation) {
-
-                    }
-                })
-                fab?.startAnimation(animation)
-
-            }
-
-
-        }
-    }
-
-    @SuppressLint("ObsoleteSdkInt")
-    fun showFab() {
-
-        if (!isFabShowing && fab != null) {
-            isFabShowing = true
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                fab!!.animate().translationY(0f).start()
-            } else {
-                val animation = AnimationUtils.makeInAnimation(this, false)
-                animation.fillAfter = true
-                animation.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation) {}
-
-                    override fun onAnimationEnd(animation: Animation) {
-                        fab?.isClickable = true
-                    }
-
-                    override fun onAnimationRepeat(animation: Animation) {}
-                })
-                fab?.startAnimation(animation)
-            }
-
-
-        }
-    }
-
-
-    @SuppressLint("ObsoleteSdkInt")
-    fun hideFabRefresh() {
-        Log.e("error" ,"Success")
-        if (isFabRefreshShowing && fabRefresh != null) {
-            isFabRefreshShowing = false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                val point = Point()
-                this.window.windowManager.defaultDisplay.getSize(point)
-                val translation = fabRefresh?.y?.minus(point.y)
-                if (translation != null) {
-                    fabRefresh?.animate()?.translationYBy(-translation)?.start()
-                }
-            } else {
-                val animation = AnimationUtils.makeOutAnimation(this, true)
-                animation.fillAfter = true
-                animation.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation) {
-
-                    }
-
-                    override fun onAnimationEnd(animation: Animation) {
-                        fabRefresh?.isClickable = false
-                    }
-
-                    override fun onAnimationRepeat(animation: Animation) {
-
-                    }
-                })
-                fabRefresh?.startAnimation(animation)
-            }
-        }
-    }
-
-    @SuppressLint("ObsoleteSdkInt")
-    fun showFabRefresh() {
-        Log.e("error" ,"Success")
-        if (!isFabRefreshShowing && fabRefresh != null) {
-            isFabRefreshShowing = true
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                fabRefresh?.animate()?.translationY(0f)?.start()
-            } else {
-                val animation = AnimationUtils.makeInAnimation(this, false)
-                animation.fillAfter = true
-                animation.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation) {}
-
-                    override fun onAnimationEnd(animation: Animation) {
-                        fabRefresh?.isClickable = true
-                    }
-
-                    override fun onAnimationRepeat(animation: Animation) {}
-                })
-                fabRefresh?.startAnimation(animation)
-            }
-        }
-    }
+//    @SuppressLint("ObsoleteSdkInt")
+//    fun showFab() {
+//
+//        if (!isFabShowing && fab != null) {
+//            isFabShowing = true
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                fab!!.animate().translationY(0f).start()
+//            } else {
+//                val animation = AnimationUtils.makeInAnimation(this, false)
+//                animation.fillAfter = true
+//                animation.setAnimationListener(object : Animation.AnimationListener {
+//                    override fun onAnimationStart(animation: Animation) {}
+//
+//                    override fun onAnimationEnd(animation: Animation) {
+//                        fab?.isClickable = true
+//                    }
+//
+//                    override fun onAnimationRepeat(animation: Animation) {}
+//                })
+//                fab?.startAnimation(animation)
+//            }
+//
+//
+//        }
+//    }
+//
+//
+//    @SuppressLint("ObsoleteSdkInt")
+//    fun hideFabRefresh() {
+//        Log.e("error" ,"Success")
+//        if (isFabRefreshShowing && fabRefresh != null) {
+//            isFabRefreshShowing = false
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                val point = Point()
+//                this.window.windowManager.defaultDisplay.getSize(point)
+//                val translation = fabRefresh?.y?.minus(point.y)
+//                if (translation != null) {
+//                    fabRefresh?.animate()?.translationYBy(-translation)?.start()
+//                }
+//            } else {
+//                val animation = AnimationUtils.makeOutAnimation(this, true)
+//                animation.fillAfter = true
+//                animation.setAnimationListener(object : Animation.AnimationListener {
+//                    override fun onAnimationStart(animation: Animation) {
+//
+//                    }
+//
+//                    override fun onAnimationEnd(animation: Animation) {
+//                        fabRefresh?.isClickable = false
+//                    }
+//
+//                    override fun onAnimationRepeat(animation: Animation) {
+//
+//                    }
+//                })
+//                fabRefresh?.startAnimation(animation)
+//            }
+//        }
+//    }
+//
+//    @SuppressLint("ObsoleteSdkInt")
+//    fun showFabRefresh() {
+//        Log.e("error" ,"Success")
+//        if (!isFabRefreshShowing && fabRefresh != null) {
+//            isFabRefreshShowing = true
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                fabRefresh?.animate()?.translationY(0f)?.start()
+//            } else {
+//                val animation = AnimationUtils.makeInAnimation(this, false)
+//                animation.fillAfter = true
+//                animation.setAnimationListener(object : Animation.AnimationListener {
+//                    override fun onAnimationStart(animation: Animation) {}
+//
+//                    override fun onAnimationEnd(animation: Animation) {
+//                        fabRefresh?.isClickable = true
+//                    }
+//
+//                    override fun onAnimationRepeat(animation: Animation) {}
+//                })
+//                fabRefresh?.startAnimation(animation)
+//            }
+//        }
+//    }
 
 
 

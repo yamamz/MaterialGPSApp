@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:fab="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:id="@+id/main_content"
 	android:layout_width="match_parent"
@@ -23,7 +24,7 @@
 			app:expandedTitleTextAppearance="@style/TextAppearance.AppCompat.Title"
 			app:layout_scrollFlags="scroll|exitUntilCollapsed">
 			<RelativeLayout
-	android:id="@+id/rel"
+				android:id="@+id/rel"
 				android:layout_width="match_parent"
 				android:layout_height="@dimen/detail_backdrop_height1">
 				<ImageView
@@ -208,40 +209,58 @@
 	</android.support.design.widget.AppBarLayout>
 
 
-	<android.support.design.widget.FloatingActionButton
 
-		android:id="@+id/fab"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_margin="@dimen/fab_margin"
-		android:clickable="true"
-		android:src="@drawable/ic_add_location_white_24dp"
-		android:layout_gravity="bottom|end"/>
-
-	<android.support.design.widget.FloatingActionButton
-
-		android:id="@+id/fab_refresh"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_margin="@dimen/fab_margin"
-		android:clickable="true"
-		android:src="@drawable/ic_refresh_white_24dp"
-		android:layout_gravity="bottom|start"/>
-
-	<Button
-		android:background="@drawable/ripple_background"
-		android:id="@+id/btn_plot"
-		style="@style/Widget.AppCompat.Button.Colored"
-		android:text="@string/plot_manually"
-		android:layout_gravity="bottom|end"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
 
 	<android.support.v4.view.ViewPager
 		android:id="@+id/viewpager"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+	<com.github.clans.fab.FloatingActionMenu
+		android:id="@+id/menu_track"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		fab:menu_icon="@drawable/fab_add"
+		fab:menu_animationDelayPerItem="0"
+		android:layout_margin="@dimen/fab_margin"
+		fab:menu_colorNormal="#43A047"
+		fab:menu_colorPressed="#2E7D32"
+		fab:menu_colorRipple="#1B5E20"
+		fab:menu_labels_maxLines="2"
+		fab:menu_labels_ellipsize="end"
+		>
+
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/fab_track"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/ic_import_export_white_24dp"
+			fab:fab_label="Add location to track"
+			style="@style/MenuButtonsSmall.Green" />
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/fab_refresh"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/ic_refresh_white_24dp"
+			fab:fab_label="refresh save data"
+			style="@style/MenuButtonsSmall.Green" />
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/fab_save"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/ic_save_white_18dp"
+			fab:fab_label="save tracks"
+			style="@style/MenuButtonsSmall.Green" />
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/fab_clear"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/ic_delete_sweep_white_24dp"
+			fab:fab_label="Clear Added tracks"
+			style="@style/MenuButtonsSmall.Green" />
+
+	</com.github.clans.fab.FloatingActionMenu>
 
 
 </android.support.design.widget.CoordinatorLayout>

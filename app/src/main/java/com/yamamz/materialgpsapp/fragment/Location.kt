@@ -209,10 +209,6 @@ class Location : Fragment() {
     }
 
 
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
 
     fun Saveloc() {
 
@@ -380,28 +376,28 @@ class Location : Fragment() {
     }
 
 
-    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
-        super.setUserVisibleHint(isVisibleToUser)
-        if (isVisibleToUser) {
-
-            try {
-                (activity as MainActivity).showFab()
-                (activity as MainActivity).hideFabRefresh()
-            } catch (e: Exception) {
-
-                Log.e("error" ,e.message)
-            }
-
-        } else {
-            try {
-                (activity as MainActivity).hideFab()
-               (activity as MainActivity).showFabRefresh()
-            } catch (e: Exception) {
-                Log.e("error" ,e.message)
-            }
-
-        }
-    }
+//    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+//        super.setUserVisibleHint(isVisibleToUser)
+//        if (isVisibleToUser) {
+//
+//            try {
+//                //(activity as MainActivity).showFab()
+//                //(activity as MainActivity).hideFabRefresh()
+//            } catch (e: Exception) {
+//
+//                Log.e("error" ,e.message)
+//            }
+//
+//        } else {
+//            try {
+//               // (activity as MainActivity).hideFab()
+//              // (activity as MainActivity).showFabRefresh()
+//            } catch (e: Exception) {
+//                Log.e("error" ,e.message)
+//            }
+//
+//        }
+//    }
 
     companion object {
 
