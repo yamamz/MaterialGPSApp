@@ -62,6 +62,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
 
     var mMap: GoogleMap? = null
     private var polygon: Polygon? = null
+    private var polyline: Polyline?=null
     @SuppressLint("UseSparseArrays")
     private val hashMapMarker = HashMap<Int, Marker>()
     private var firstPoint: Boolean = false
@@ -78,6 +79,9 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
     private var latLngs= ArrayList<LatLng>()
     private var mapObjects= ArrayList<MapObject>()
 
+
+    private var isAPolylineActive: Boolean= true
+
     override fun clearAllvalues() {
         tvArea.text = "Area: 0.0"
         AreaOfPolygon = 0.0
@@ -86,6 +90,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
         points?.clear()
         Eastings.clear()
         Northings.clear()
+        firstPoint = false
     }
 
     override fun putMarkerOnMap(p0: LatLng?) {
@@ -197,7 +202,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             mMap?.animateCamera(CameraUpdateFactory
                     .newCameraPosition(position), 2000, null)
 
-            mMap?.setMaxZoomPreference(19f)//set the maximum zoom level of the map
+            mMap?.setMaxZoomPreference(30f)//set the maximum zoom level of the map
 
         }
     }
@@ -216,49 +221,75 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
         mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(0.00, 0.00), 0f))
         mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID//set hybrid map tile
         //create a marker bitmap
-        val mDotMarkerBitmap = createBitmapMarker()
+        //val mDotMarkerBitmap = createBitmapMarker()
         //map click listener
         mMap?.setOnMapClickListener { point ->
             //add the Latlong to points List
-            point?.let { points?.add(it) }
-            if (!firstPoint) {
-                //add the circle marker to the map
-                presenter.drawShape(point)
 
-                //put the marker the hashmap for removing purpose
-                marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
+            if (isAPolylineActive) {
+                point?.let { points?.add(it) }
+                if (!firstPoint) {
+                    //add the circle marker to the map
+                    presenter.drawShape(point)
 
-                //initialize polygon Options
-                val rectOptions = PolygonOptions()
-                        .strokeWidth(4f)
-                        .fillColor(0x7F00FF00)
-                        .add(point)
+                    //put the marker the hashmap for removing purpose
+                    marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
 
-                polygon = mMap?.addPolygon(rectOptions)
+                    //initialize polygon Options
+                    val rectOptions = PolygonOptions()
+                            .strokeWidth(4f)
+                            .fillColor(0x7F00FF00)
+                            .add(point)
 
-                //convert wgs84 to UTM projection
-                presenter.convertWGSToUTM(point)
-                firstPoint = true
-                //showFab()
+                    polygon = mMap?.addPolygon(rectOptions)
 
-            } else {
-                //update polygon shape base on latLong
-                polygon?.points = points
-                //add marker for polygon corner
-                presenter.drawShape(point)
-                //put marker object to haskmap for removing marker purpose
-                marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
+                    //convert wgs84 to UTM projection
+                    presenter.convertWGSToUTM(point)
+                    firstPoint = true
+                    //showFab()
 
-                //convert wgs84 to UTM projection
-                presenter.convertWGSToUTM(point)
+                } else {
+                    //update polygon shape base on latLong
+                    polygon?.points = points
+                    //add marker for polygon corner
+                    presenter.drawShape(point)
+                    //put marker object to haskmap for removing marker purpose
+                    marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
+
+                    //convert wgs84 to UTM projection
+                    presenter.convertWGSToUTM(point)
 
 
-                val area = calculateArea()
+                    val area = calculateArea(Northings,Eastings)
 
-                val df = DecimalFormat("##.####")
-                tvArea.text = "Area: ${df.format(area)} m²"
-                //showFab()
+                    val df = DecimalFormat("##.####")
+                    tvArea.text = "Area: ${df.format(area)} m²"
+                    //showFab()
 
+                }
+            }
+
+
+            else {
+                point?.let { points?.add(it) }
+                if (!firstPoint) {
+                    polyline = mMap?.addPolyline(PolylineOptions()
+                            .clickable(true)
+                            .color(Color.MAGENTA)
+                            .width(5f)
+                            .jointType(JointType.ROUND)
+                            .add(point))
+                    presenter.drawShape(point)
+                    //put the marker the hashmap for removing purpose
+                    marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
+                    firstPoint = true
+                }
+                else{
+                    presenter.drawShape(point)
+                    polyline?.points=points
+                    marker?.let { points?.size?.minus(0)?.let { it1 -> hashMapMarker.put(it1, it) } }
+
+                }
             }
         }
 
@@ -266,7 +297,7 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
 
 
     //this function is for calculating the area of a polygon base on northing/easting coordinates
-    private fun calculateArea(): Double {
+    private fun calculateArea(Northings:ArrayList<Double>,Eastings:ArrayList<Double>): Double {
         if (Northings.size >= 2) {
             val area: Double
             val prodx = DoubleArray(Northings.size)
@@ -325,93 +356,117 @@ class PlotActivity : AppCompatActivity(), OnMapReadyCallback, PlaceSelectionList
             delay += 150
         }
 
-        createCustomAnimation()
+        //createCustomAnimation()
+
+        fab_poly_line_or_gon.setOnClickListener {
+      when(isAPolylineActive){
+
+          true ->{
+
+              fab_poly_line_or_gon.setImageResource(R.drawable.ic_timeline_white_24dp)
+              fab_poly_line_or_gon.labelText="Polyline is active"
+              finish_points()
+              isAPolylineActive=false
+
+
+          }
+
+          false -> {
+
+              fab_poly_line_or_gon.setImageResource(R.drawable.ic_format_shapes_white_24dp)
+              fab_poly_line_or_gon.labelText="Polygon is active"
+              finish_points()
+              isAPolylineActive=true
+
+          }
+      }
+        }
 
         fab_save.setOnClickListener {
 
             var filename: CharSequence? = null
             if (mapObjects.size>= 1)
-                MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
+                if(points?.size==0) {
+                    MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
 
-                ) { dialog, input ->
-                    filename = input
+                    ) { dialog, input ->
+                        filename = input
 
-                    if (filename?.length?:0 > 0) {
+                        if (filename?.length ?: 0 > 0) {
 
-                        mapObjects.forEachIndexed {i,e->
+                            mapObjects.forEachIndexed { i, e ->
 
-                            Saveloc(e.latLngList,filename.toString(),i,e.area)
+                                Saveloc(e.latLngList, filename.toString(), i, e.area)
+
+                            }
+
 
                         }
 
+                    }.show()
+                }
+            else{
 
-                    }
+                presenter.showSnackBar("finish first your active plot")
+            }
 
-                }.show()
+            else
+                presenter.showSnackBar("you dont have finish map object finish first to save")
 
                         //loop each object to get each arrayList of LatLong
 
         }
 
         fab_check.setOnClickListener { view ->
-           val  fin_points=ArrayList<LatLng>()
-
-            points?.forEach {
-                fin_points.add(LatLng(it.latitude, it.longitude))
-            }
-
-            if (points?.size != 0) {
-
-                val rectOptions = PolygonOptions()
-                        .strokeWidth(4f)
-                        .fillColor(0x7F00FF00)
-                        .add( fin_points[0].latitude.let { LatLng(it,  fin_points[0].longitude) })
-                polygon = mMap?.addPolygon(rectOptions)
-                polygon?.points = fin_points
-
-               // hideFab()
-                removeMarkers()
-                val area=calculateArea()
-                val mapObject = MapObject(fin_points,area)
-                mapObjects.add(mapObject)
-
-                presenter.clearAllvalues()
-
-            }
-
-
+         finish_points()
         }
 
         fab_gpsTracks.setOnClickListener {
-
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
+
 fab_export.setOnClickListener {
     var filename: CharSequence? = null
     if ( mapObjects.size >= 1)
-        MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
+    //checking if there no active plot
+        if(points?.size==0) {
+            MaterialDialog.Builder(this).title(R.string.input).inputType(InputType.TYPE_CLASS_TEXT).input(R.string.input_hint, R.string.input_prefill
 
-        ) { dialog, input ->
-            filename = input
+            ) { dialog, input ->
+                filename = input
 
-            if (filename?.length?:0 > 0) {
-             //loop each object to get each arrayList of LatLong
-             mapObjects.forEach {
-                 //random the current date int for unique value
+                if (filename?.length ?: 0 > 0) {
+                    //loop each object to get each arrayList of LatLong
+                    mapObjects.forEach {
+                        //random the current date int for unique value
 
-                 presenter.generateCSV(filename.toString(),it.latLngList)
+                        presenter.generateCSV(filename.toString(), it.latLngList)
 
-                 //generateCSVOnSD(filename.toString().plus(intDate).plus("WGS_84.csv"),it.latLngList)
+                        //generateCSVOnSD(filename.toString().plus(intDate).plus("WGS_84.csv"),it.latLngList)
+
+                    }
 
                 }
 
-            }
+            }.show()
 
-        }.show()
+        }
+    //if there is active plot
+    else{
+
+            presenter.showSnackBar("finish first your active plot")
+        }
+
+    else
+        presenter.showSnackBar("you dont have finish map object finish first to export")
 }
 
+fab_clearMap.setOnClickListener {
 
+    presenter.clearAllvalues()
+    mMap?.clear()
+}
         //undo plotting purpose
         fab.setOnClickListener { view ->
 
@@ -419,16 +474,19 @@ fab_export.setOnClickListener {
                 val marker: Marker? = hashMapMarker[points?.size]
                 marker?.remove()
                 hashMapMarker.remove(points?.size)
-                Northings.size.minus(1).let { Northings.removeAt(it) }
-                Eastings.size.minus(1).let { Eastings.removeAt(it) }
+                //
+                if(isAPolylineActive) {
+                    Northings.size.minus(1).let { Northings.removeAt(it) }
+                    Eastings.size.minus(1).let { Eastings.removeAt(it) }
+                }
                 points?.size?.minus(1)?.let { points?.removeAt(it) }
 
 
                 //update the area upon deleting corner of a polygon
-                calculateArea()
+                calculateArea(Northings,Eastings)
 
                 val df = DecimalFormat("##.####")
-                val area = calculateArea()
+                val area = calculateArea(Northings,Eastings)
                 tvArea.text = "Area: ${df.format(area)}m²"
 
                 if (points?.size == 0) {
@@ -436,7 +494,11 @@ fab_export.setOnClickListener {
                     tvArea.text = "Area: 0.0"
                     AreaOfPolygon = 0.0
                 } else {
+                    if(isAPolylineActive)
                     polygon?.points = points
+                    else
+                        polyline?.points=points
+
 
                 }
             } else {
@@ -446,34 +508,90 @@ fab_export.setOnClickListener {
         }
     }
 
+    fun finish_points(){
+        val  fin_points=ArrayList<LatLng>()
 
-    fun createCustomAnimation() {
-        val set = AnimatorSet()
+        points?.forEach {
+            fin_points.add(LatLng(it.latitude, it.longitude))
+        }
 
-        val scaleOutX = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleX", 1.0f, 0.2f)
-        val scaleOutY = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleY", 1.0f, 0.2f)
-        val scaleInX = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleX", 0.2f, 1.0f)
-        val scaleInY = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleY", 0.2f, 1.0f)
+        if (points?.size != 0 && isAPolylineActive) {
+            try {
+                val rectOptions = PolygonOptions()
+                        .strokeWidth(4f)
+                        .fillColor(0x7F00FF00)
+                        .add(fin_points[0].latitude.let { LatLng(it, fin_points[0].longitude) })
+                polygon = mMap?.addPolygon(rectOptions)
+                polygon?.points = fin_points
 
-        scaleOutX.duration = 50
-        scaleOutY.duration = 50
-        scaleInX.duration = 150
-        scaleInY.duration = 150
+                // hideFab()
+                removeMarkers()
+                val area = calculateArea(Northings, Eastings)
+                val mapObject = MapObject(fin_points, area,"Polygon")
+                mapObjects.add(mapObject)
 
-        scaleInX.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationStart(animation: Animator) {
-                menu_green?.menuIconView?.setImageResource(if (menu_green.isOpened)
-                    R.drawable.ic_close_white_24dp
-                else
-                    R.drawable.fab_add)
+                presenter.clearAllvalues()
+
             }
-        })
+            catch (e: IndexOutOfBoundsException){
 
-        set.play(scaleOutX).with(scaleOutY)
-        set.play(scaleInX).with(scaleInY).after(scaleOutX)
-        set.interpolator = OvershootInterpolator(2f)
-        menu_green.iconToggleAnimatorSet = set
+            }
+
+        }
+
+        else{
+            try {
+                polyline = mMap?.addPolyline(PolylineOptions()
+                        .clickable(true)
+                        .color(Color.MAGENTA)
+                        .width(5f)
+                        .jointType(JointType.ROUND)
+                        .add(fin_points[0].latitude.let { LatLng(it, fin_points[0].longitude) }))
+                polyline?.points = fin_points
+
+                removeMarkers()
+
+                val mapObject = MapObject(fin_points, 0.0,"Polyline")
+                mapObjects.add(mapObject)
+
+                presenter.clearAllvalues()
+            }
+            catch (e: IndexOutOfBoundsException){
+
+            }
+
+        }
+
+
     }
+
+//    fun createCustomAnimation() {
+//        val set = AnimatorSet()
+//
+//        val scaleOutX = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleX", 1.0f, 0.2f)
+//        val scaleOutY = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleY", 1.0f, 0.2f)
+//        val scaleInX = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleX", 0.2f, 1.0f)
+//        val scaleInY = ObjectAnimator.ofFloat(menu_green.menuIconView, "scaleY", 0.2f, 1.0f)
+//
+//        scaleOutX.duration = 50
+//        scaleOutY.duration = 50
+//        scaleInX.duration = 150
+//        scaleInY.duration = 150
+//
+//        scaleInX.addListener(object : AnimatorListenerAdapter() {
+//            override fun onAnimationStart(animation: Animator) {
+//                menu_green?.menuIconView?.setImageResource(if (menu_green.isOpened)
+//                    R.drawable.ic_close_white_24dp
+//                else
+//                    R.drawable.fab_add)
+//            }
+//        })
+//
+//        set.play(scaleOutX).with(scaleOutY)
+//        set.play(scaleInX).with(scaleInY).after(scaleOutX)
+//        set.interpolator = OvershootInterpolator(2f)
+//        menu_green.iconToggleAnimatorSet = set
+//    }
 
 
 

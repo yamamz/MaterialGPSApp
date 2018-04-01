@@ -250,7 +250,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:src="@drawable/ic_save_white_18dp"
-			fab:fab_label="save tracks"
+			fab:fab_label="save and export  tracks to CVS"
 			style="@style/MenuButtonsSmall.Green" />
 		<com.github.clans.fab.FloatingActionButton
 			android:id="@+id/fab_clear"

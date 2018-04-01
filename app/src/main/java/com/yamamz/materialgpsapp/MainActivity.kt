@@ -129,7 +129,12 @@ class MainActivity : AppCompatActivity() {
             mUiHandler.postDelayed(Runnable { it.showMenuButton(true) }, delay.toLong())
             delay += 150
         }
+        menu_track.setOnMenuButtonClickListener {
+            if (menu_track.isOpened) {
+            }
 
+            menu_track.toggle(true)
+        }
 
 
         createCustomAnimation()

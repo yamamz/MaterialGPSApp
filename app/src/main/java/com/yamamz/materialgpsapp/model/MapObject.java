@@ -11,12 +11,14 @@ import java.util.List;
  */
 
 public class MapObject {
+    private String objectType;
    private ArrayList<LatLng> latLngList;
    private Double area;
 
-    public MapObject(ArrayList<LatLng> latLngList,Double area) {
+    public MapObject(ArrayList<LatLng> latLngList,Double area,String objectType) {
         this.latLngList = latLngList;
         this.area=area;
+        this.objectType=objectType;
     }
 
     public ArrayList<LatLng> getLatLngList() {
@@ -25,5 +27,9 @@ public class MapObject {
 
     public Double getArea() {
         return area;
+    }
+
+    public String getObjectType() {
+        return objectType;
     }
 }
